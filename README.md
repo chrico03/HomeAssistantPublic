@@ -10,11 +10,7 @@ This repository contains the **public version** of my Home Assistant setup. It r
 
 ## 📊 Dashboard Preview
 
-<!-- TODO: Add screenshot of the main Home Assistant dashboard -->
-
-<!-- Example:
-![Main Dashboard](./screenshots/dashboard.png)
--->
+![Main Dashboard](Screenshot_20260118-160939.png)
 
 ---
 
