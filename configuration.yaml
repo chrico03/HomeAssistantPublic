@@ -1,0 +1,39 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+template: !include sensors/templates.yaml
+sensor: !include sensors/platform_sensors.yaml
+input_boolean: !include sensors/input_boolean.yaml
+input_select: !include sensors/input_select.yaml
+input_datetime: !include sensors/input_datetime.yaml
+input_number: !include sensors/input_number.yaml
+input_text: !include sensors/input_text.yaml
+group: !include sensors/groups.yaml
+utility_meter: !include sensors/utility_meter.yaml
+switch: !include sensors/switches.yaml
+
+homeassistant:
+  customize: !include sensors/batteries.yaml
+
+logger:
+  default: critical
+  logs:
+    homeassistant.core: fatal
+    
+zha:
+  zigpy_config:
+    source_routing: true
+
+notify:
+  - platform: group
+    name: phone_list
+    services:
+      - service: mobile_app_phone
