@@ -1,0 +1,541 @@
+white_relax:
+  alias: White Relax
+  description: Turn lights on in White Relax mode
+  mode: parallel
+  max: 10
+  fields:
+    target_lights:
+      description: Entity ID(s) of lights to control
+  sequence:
+  - target:
+      entity_id: '{{ target_lights }}'
+    data:
+      brightness: 140
+      color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+    action: light.turn_on
+
+energize:
+  alias: Energize
+  mode: parallel
+  max: 10
+  description: Turn lights on in Energize mode
+  fields:
+    target_lights:
+      description: Entity ID(s) of lights to control
+  sequence:
+  - target:
+      entity_id: '{{ target_lights }}'
+    data:
+      brightness: 255
+      color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+    action: light.turn_on
+
+dimmed:
+  alias: Dimmed
+  mode: parallel
+  max: 10
+  description: Turn lights on in Dimmed mode
+  fields:
+    target_lights:
+      description: Entity ID(s) of lights to control
+  sequence:
+  - target:
+      entity_id: '{{ target_lights }}'
+    data:
+      brightness: 77
+      color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+    action: light.turn_on
+
+nightlight:
+  alias: Nightlight
+  mode: parallel
+  max: 10
+  description: Turn lights on in Nightlight mode
+  fields:
+    target_lights:
+      description: Entity ID(s) of lights to control
+  sequence:
+  - target:
+      entity_id: '{{ target_lights }}'
+    data:
+      brightness: 1
+      color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+    action: light.turn_on
+
+garage_wall_night:
+  alias: Garage Wall Night
+  sequence:
+  - service: light.turn_on
+    target:
+      entity_id: light.zigbee_group_patio
+    data:
+      brightness: 85
+      color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.garage_ceiling_1
+      - light.garage_ceiling_2
+      - light.garage_ceiling_3
+      - light.garage_ceiling_4
+  - service: light.turn_off
+    target:
+      entity_id: light.driveway_flood_light
+
+upstairs:
+  alias: Upstairs
+  sequence:
+  - parallel:
+    - data:
+        target_lights: light.zigbee_group_library
+      action: script.white_relax
+    - data:
+        target_lights: light.zigbee_group_main_bath
+      action: script.white_relax
+    - data:
+        target_lights: light.zigbee_group_bedroom
+      action: script.white_relax
+    - action: script.meditation
+      metadata: {}
+      data: {}
+  mode: single
+
+movies:
+  alias: Movies
+  sequence:
+  - parallel:
+    - target:
+        entity_id: light.grandfather_clock
+      data:
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+        brightness: 255
+      action: light.turn_on
+    - target:
+        entity_id: light.tv
+      data:
+        brightness: 255
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+      action: light.turn_on
+    - target:
+        entity_id: light.floor_lamp
+      data:
+        brightness: 85
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+      action: light.turn_on
+    - target:
+        entity_id:
+        - light.end_table_1
+        - light.end_table_2
+        - light.glass_shelf_top
+        - light.glass_shelf_bottom
+        - light.top_of_clock
+        - light.top_of_clock_2
+      action: light.turn_off
+      data: {}
+  description: ''
+  icon: mdi:ceiling-light-multiple
+
+meditation:
+  alias: Meditation
+  sequence:
+  - parallel:
+    - target:
+        entity_id: light.cabinet
+      data:
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+        brightness: 50
+      action: light.turn_on
+    - target:
+        entity_id: light.floor_lamp_2
+      data:
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+        brightness: 50
+      action: light.turn_on
+    - target:
+        entity_id:
+        - light.ceiling1
+        - light.ceiling2
+      action: light.turn_off
+      data: {}
+  description: ''
+  icon: mdi:ceiling-light-multiple
+
+garage_door_open:
+  alias: Garage Door Open
+  sequence:
+  - parallel:
+    - target:
+        entity_id: light.garage_wall
+      data:
+        brightness: 91
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+      action: light.turn_on
+    - target:
+        entity_id:
+        - light.garage_ceiling_1
+        - light.garage_ceiling_2
+        - light.garage_ceiling_3
+        - light.garage_ceiling_4
+      data:
+        brightness: 255
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+      action: light.turn_on
+    - target:
+        entity_id: light.driveway_flood_light
+      data:
+        brightness: 255
+      action: light.turn_on
+  description: ''
+  icon: mdi:ceiling-light-multiple
+
+vacuum_clean_segment:
+  alias: Vacuum - Clean Segment
+  description: Clean a mapped Dreame segment
+  fields:
+    target_vacuum:
+      description: Vacuum entity to use
+      example: vacuum.d10_plus_gen_2_main_floor
+    segment:
+      description: Dreame segment number to clean
+      example: 3
+  sequence:
+  - service: dreame_vacuum.vacuum_clean_segment
+    target:
+      entity_id: '{{ target_vacuum }}'
+    data:
+      segments: '{{ segment }}'
+  mode: single
+
+vacuum_clean_entire_floor:
+  alias: Vacuum - Clean Entire Floor
+  description: Start full cleaning for any Dreame vacuum
+  fields:
+    target_vacuum:
+      description: Vacuum entity to start
+  sequence:
+  - service: vacuum.start
+    target:
+      entity_id: '{{ target_vacuum }}'
+  mode: single
+
+bedtime_winter:
+  alias: Bedtime
+  sequence:
+  - parallel:
+    - target:
+        entity_id:
+        - cover.main_garage_door
+        - cover.side_garage_door
+      action: cover.close_cover
+      data: {}
+    - target:
+        entity_id: switch.fireplace
+      action: switch.turn_off
+      data: {}
+    - target:
+        entity_id:
+        - fan.bedroom_fan
+      data:
+        percentage: "{{ states('sensor.ceiling_fan_speed') | int }}"
+      action: fan.set_percentage
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        fan_mode: "{{ states('sensor.fan_mode') }}"
+      action: climate.set_fan_mode
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        temperature: "{{ states('sensor.desired_indoor_temp') | float }}"
+      action: climate.set_temperature
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        hvac_mode: "{{ states('sensor.hvac_mode') }}"
+      action: climate.set_hvac_mode
+    - target:
+        floor_id:
+        - top_floor
+        - main_floor
+        - basement
+      action: light.turn_off
+      data: {}
+    - action: switch.turn_off
+      metadata: {}
+      data: {}
+      target:
+        entity_id: switch.christmas_tree_all
+      enabled: false
+    - target:
+        entity_id:
+        - lock.back_door_lock
+        - lock.front_door_lock
+        - lock.garage_handle_lock
+      action: lock.lock
+      data: {}
+  mode: single
+
+garage_motion:
+  alias: Garage Motion
+  sequence:
+  - parallel:
+    - action: light.turn_on
+      metadata: {}
+      data:
+        color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+        brightness_pct: 100
+      target:
+        entity_id:
+        - light.garage_ceiling_1
+        - light.garage_ceiling_2
+        - light.garage_ceiling_3
+        - light.garage_ceiling_4
+  description: Turn on all the lights when the garage is occupied
+  icon: mdi:ceiling-light-multiple
+
+awake_2:
+  alias: Awake
+  sequence:
+  - parallel:
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        hvac_mode: "{{ states('sensor.hvac_mode') }}"
+      action: climate.set_hvac_mode
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        temperature: "{{ states('sensor.desired_indoor_temp') | float }}"
+      action: climate.set_temperature
+    - target:
+        entity_id: climate.ecobee_thermostat
+      data:
+        fan_mode: "{{ states('sensor.fan_mode') }}"
+      action: climate.set_fan_mode
+    - target:
+        entity_id: fan.bedroom_fan
+      data:
+        percentage: "{{ states('sensor.ceiling_fan_speed') | int }}"
+      action: fan.set_percentage
+    - action: switch.turn_on
+      metadata: {}
+      data: {}
+      target:
+        entity_id: switch.christmas_tree_all
+      enabled: false
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: binary_sensor.fireplace_mode
+          state: 'on'
+        sequence:
+        - target:
+            entity_id: switch.fireplace
+          action: switch.turn_on
+          data: {}
+      default:
+      - target:
+          entity_id: switch.fireplace
+        action: switch.turn_off
+        data: {}
+  mode: single
+
+event_feed_cat:
+  alias: Feed Cat
+  description: ''
+  sequence:
+  - target:
+      entity_id: button.cat_feeder_feed
+    action: button.press
+    data: {}
+
+leaving_home:
+  sequence:
+  - parallel:
+    - action: climate.set_hvac_mode
+      metadata: {}
+      data:
+        hvac_mode: heat_cool
+      target:
+        entity_id: climate.ecobee_thermostat
+    - action: light.turn_off
+      metadata: {}
+      data: {}
+      target:
+        floor_id:
+        - basement
+        - main_floor
+        - top_floor
+    - action: lock.lock
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - lock.back_door_lock
+        - lock.front_door_lock
+    - action: cover.close_cover
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - cover.main_garage_door
+        - cover.side_garage_door
+    - action: switch.turn_off
+      metadata: {}
+      data: {}
+      target:
+        entity_id: switch.fireplace
+    - action: script.vacuum_clean_entire_floor
+      data:
+        target_vacuum: vacuum.d10_plus_gen_2_main_floor
+    - action: script.vacuum_clean_entire_floor
+      data:
+        target_vacuum: vacuum.d10_plus_gen_2_upstairs
+    - action: script.vacuum_clean_entire_floor
+      data:
+        target_vacuum: vacuum.d10_plus_gen_2_basement
+  alias: Leaving Home
+  description: ''
+
+arriving_day:
+  sequence:
+  - parallel:
+    - action: vacuum.return_to_base
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - vacuum.d10_plus_gen_2_basement
+        - vacuum.d10_plus_gen_2_upstairs
+        - vacuum.d10_plus_gen_2_main_floor
+    - action: climate.set_hvac_mode
+      metadata: {}
+      data:
+        hvac_mode: "{{ states('sensor.hvac_mode') }}"
+      target:
+        entity_id: climate.ecobee_thermostat
+    - action: climate.set_fan_mode
+      metadata: {}
+      data:
+        fan_mode: "{{ states('sensor.fan_mode') }}"
+      target:
+        entity_id: climate.ecobee_thermostat
+    - action: lock.unlock
+      metadata: {}
+      data: {}
+      target:
+        entity_id: lock.back_door_lock
+  alias: Arriving (Day)
+  description: ''
+
+arriving_night:
+  sequence:
+  - parallel:
+    - action: vacuum.return_to_base
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - vacuum.d10_plus_gen_2_basement
+        - vacuum.d10_plus_gen_2_upstairs
+        - vacuum.d10_plus_gen_2_main_floor
+    - action: climate.set_hvac_mode
+      metadata: {}
+      data:
+        hvac_mode: "{{ states('sensor.hvac_mode') }}"
+      target:
+        entity_id: climate.ecobee_thermostat
+    - action: climate.set_fan_mode
+      metadata: {}
+      data:
+        fan_mode: "{{ states('sensor.fan_mode') }}"
+      target:
+        entity_id: climate.ecobee_thermostat
+    - action: script.garage_energize
+      metadata: {}
+      data: {}
+    - action: script.kitchen_white_relax
+      metadata: {}
+      data: {}
+    - action: script.living_room_white_relax
+      metadata: {}
+      data: {}
+    - action: lock.unlock
+      metadata: {}
+      data: {}
+      target:
+        entity_id: lock.back_door_lock
+  alias: Arriving (Night)
+  description: ''
+
+event_furnace_filter_changed:
+  sequence:
+  - action: input_datetime.set_datetime
+    metadata: {}
+    target:
+      entity_id: input_datetime.furnace_filter_last_changed
+    data:
+      date: "{{ now().strftime('%Y-%m-%d') }}"
+      time: "{{ now().strftime('%H:%M:%S') }}"
+  mode: single
+  alias: Event - Furnace Filter Changed
+  description: ''
+
+event_clothing_suggestion:
+  alias: Event - Clothing Suggestion
+  mode: single
+  sequence:
+  - data:
+      entity_id: weather.pirateweather
+      type: daily
+    response_variable: forecast_data
+    action: weather.get_forecasts
+  - variables:
+      today: "{{ forecast_data['weather.pirateweather'].forecast[0] }}"
+      temp: "{{ today.temperature | float }}"
+      templow: "{{ today.templow | float }}"
+      rain_prob: "{{ today.precipitation_probability | float }}"
+      wind: "{{ today.wind_speed | float }}"
+      condition: "{{ today.condition | title }}"
+      snow_accum: "{{ states('sensor.pirateweather_current_day_snow_accumulation') | float(0) }}"
+      summary: "Today will be {{ condition.lower() }} with a high of {{ temp | round(0)
+        }}° and a low of {{templow | round(0) }}°. Winds around {{ wind | round(0)
+        }} mph. {% if rain_prob > 0 %}\n  There's a {{ rain_prob | round(0) }}% chance
+        of {{ 'rain' if temp > 32 else 'snow' }}.\n{% endif %}"
+      outfit: "{% if temp <= 0 %}\n  It's down-right arctic out there — only go out
+        if necessary, and bundle up.\n{% elif temp <= 40 %}\n  It's going to be chilly
+        — wear a coat, gloves, and maybe a hat.\n{% elif temp <= 55 %}\n  A cool day
+        ahead — a light jacket or hoodie should be comfortable.\n{% elif temp <= 70
+        %}\n  Comfortable weather — jeans and a t-shirt or long sleeves are perfect.\n{%
+        elif temp <= 80 %}\n  Warm day — short sleeves or lighter clothing are ideal.\n{%
+        else %}\n  It's a hot one — shorts, t-shirt, and plenty of water recommended.\n{%
+        endif %}\n  \n{% if rain_prob >= 50 %}\n  {% if temp > 32 %}\n    Don’t forget
+        a rain jacket or umbrella — showers are possible later.\n  {% else %}\n    Don’t
+        forget a winter coat and boots — snow showers are possible later.\n  {% endif
+        %}\n{% elif rain_prob >= 30 %}\n  {% if temp > 32 %}\n    Might see a few
+        sprinkles — maybe pack a light jacket, just in case.\n  {% else %}\n    Might
+        see a few flurries — consider warm footwear.\n  {% endif %}\n{% endif %}\n
+        \ \n{% if snow_accum > 0 %}\n  There's snow on the ground, so be sure wear
+        actual shoes when you go outside.\n{% endif %}\n  \n{% if templow <= 40 %}\n
+        \ Evening will be cold — consider bringing a jacket.\n{% elif templow <= 55
+        %}\n  Evening will be cool — maybe bring a hoodie.\n{% endif %}"
+      message: '{{ summary | trim }} {{ outfit | trim }}'
+  - action: assist_satellite.announce
+    metadata: {}
+    data:
+      message: '{{ message }}'
+      preannounce: false
+    target:
+      entity_id:
+      - assist_satellite.home_assistant_voice_bedroom_assist_satellite
+  description: ''
+
+event_open_garage_door_tile:
+  sequence:
+  - action: cover.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id: cover.main_garage_door
+  alias: Event - Toggle Garage Door (Tile)
+  description: ''
