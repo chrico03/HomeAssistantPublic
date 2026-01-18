@@ -1,0 +1,2588 @@
+- id: '1716869698728'
+  alias: Home - Leaving
+  description: This automation runs the vacuum cleaners, sets the thermostat to heat/cool,
+    and turns off all lights when the home zone is empty for more than 5 minutes.
+  triggers:
+  - entity_id:
+    - zone.home
+    to: '0'
+    trigger: state
+  actions:
+  - action: script.leaving_home
+    metadata: {}
+    data: {}
+  - action: input_select.select_option
+    metadata: {}
+    data:
+      option: not_home
+    target:
+      entity_id: input_select.home_mode
+  mode: single
+
+- id: '1717873880277'
+  alias: Notify - Washing Done
+  description: Using the derived Threshold Sensor, determine when the Washing Machine
+    is done, and notify my phone
+  triggers:
+  - entity_id:
+    - binary_sensor.washing_machine_running
+    from: 'on'
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - metadata: {}
+    data:
+      message: Move to Dryer
+      title: Washer is done
+    action: notify.phone_list
+  mode: single
+
+- id: '1718212148891'
+  alias: Notify - Side Door Open
+  description: When the Side Door is opened, send a Notification to my phone
+  triggers:
+  - entity_id:
+    - binary_sensor.side_door_contact_sensor
+    to: 'on'
+    trigger: state
+  conditions: []
+  actions:
+  - metadata: {}
+    data:
+      message: Side Door Open
+    action: notify.phone_list
+  mode: single
+
+- id: '1718327651681'
+  alias: Notify - Low Battery
+  description: Notify if any battery is below 20%, excluding certain sensors.
+  triggers:
+  - hours: /8
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - variables:
+      excluded_entities:
+      - sensor.garage_handle_lock_battery_voltage
+      - sensor.back_door_lock_battery_voltage
+      - sensor.front_door_lock_battery_voltage
+      - sensor.ecolink_firefighter_battery
+      - sensor.low_battery_devices
+      low_batteries: "{% set sensors = states.sensor\n  | selectattr('entity_id',
+        'search', '_battery')\n  | rejectattr('entity_id', 'in', excluded_entities)\n
+        \ | list %}\n{% set ns = namespace(low=[]) %} {% for sensor in sensors %}\n
+        \ {% set level = sensor.state | float(100) %}\n  {% if level < 20 %}\n    {%
+        set ns.low = ns.low + [sensor.entity_id] %}\n  {% endif %}\n{% endfor %} {{
+        ns.low }}\n"
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ low_batteries | length > 0 }}'
+      sequence:
+      - data:
+          title: Warning!
+          message: 'Low battery level: {%- for entity_id in low_batteries %} • {{
+            state_attr(entity_id, ''friendly_name'') or entity_id }} ({{ states(entity_id)
+            }}%): {{ state_attr(entity_id, ''battery_quantity'') | default(''?'')
+            }} x {{ state_attr(entity_id, ''battery_type'') | default(''?'') }} {%-
+            if not loop.last %}\n{% endif -%} {%- endfor %}'
+        action: notify.phone_list
+  mode: single
+
+- id: '1719722965777'
+  alias: Lights - Closet
+  description: Turn on closet light when door opens, turn off when door closes
+  triggers:
+  - entity_id: binary_sensor.closet_contact_sensor
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.closet_contact_sensor
+    to: 'off'
+    trigger: state
+  conditions:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: input_select.home_mode
+      state: bedtime
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.closet_contact_sensor
+        state: 'on'
+      sequence:
+      - target:
+          entity_id: light.closet
+        action: light.turn_on
+        data: {}
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.closet_contact_sensor
+        state: 'off'
+      sequence:
+      - target:
+          entity_id: light.closet
+        action: light.turn_off
+        data: {}
+  mode: single
+
+- id: '1719723426335'
+  alias: Lights - Basement
+  description: Turn on basement lights when door opens, turn off when door closes
+  triggers:
+  - entity_id: binary_sensor.basement_door_contact_sensor
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.basement_door_contact_sensor
+    to: 'off'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.basement_door_contact_sensor
+        state: 'on'
+      sequence:
+      - parallel:
+        - target:
+            entity_id:
+            - light.zigbee_group_basement
+          action: light.turn_on
+          data: {}
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.basement_door_contact_sensor
+        state: 'off'
+      sequence:
+      - parallel:
+        - target:
+            entity_id:
+            - light.zigbee_group_basement
+          action: light.turn_off
+          data: {}
+  mode: single
+
+- id: '1719723688562'
+  alias: Lights - Laundry
+  description: Turn on laundry lights when door opens, turn off when door closes
+  triggers:
+  - entity_id: binary_sensor.laundry_door_contact_sensor
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.laundry_door_contact_sensor
+    to: 'off'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.laundry_door_contact_sensor
+        state: 'on'
+      sequence:
+      - target:
+          entity_id:
+          - light.zigbee_group_laundry
+        data: {}
+        action: light.turn_on
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.laundry_door_contact_sensor
+        state: 'off'
+      sequence:
+      - target:
+          entity_id:
+          - light.zigbee_group_laundry
+        data: {}
+        action: light.turn_off
+  mode: single
+
+- id: '1720477153974'
+  alias: Lights - Kitchen
+  triggers:
+  - trigger: state
+    entity_id: sensor.kitchen_mode
+    to: early
+    id: early
+  - trigger: state
+    entity_id: sensor.kitchen_mode
+    to: late
+    id: late
+  - trigger: state
+    entity_id: sensor.kitchen_mode
+    to: 'off'
+    id: unoccupied
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_kitchen
+        action: script.energize
+    - conditions:
+      - condition: trigger
+        id: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_kitchen
+        action: script.white_relax
+    - conditions:
+      - condition: trigger
+        id: unoccupied
+      sequence:
+      - target:
+          entity_id: light.zigbee_group_kitchen
+        action: light.turn_off
+  mode: single
+
+- id: '1720477864972'
+  alias: Lights - Library
+  triggers:
+  - entity_id: sensor.library_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.library_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_library
+        action: script.energize
+    - conditions:
+      - condition: state
+        entity_id: sensor.library_mode
+        state: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_library
+        action: script.white_relax
+    default:
+    - target:
+        entity_id: light.zigbee_group_library
+      action: light.turn_off
+
+- id: '1720746042717'
+  alias: Lights - Meditation
+  triggers:
+  - entity_id: sensor.meditation_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.meditation_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_meditation
+        action: script.white_relax
+    - conditions:
+      - condition: state
+        entity_id: sensor.meditation_mode
+        state: late
+      sequence:
+      - target:
+          entity_id: script.meditation
+        action: script.turn_on
+        data: {}
+    default:
+    - target:
+        entity_id: light.zigbee_group_meditation
+      action: light.turn_off
+      data: {}
+
+- id: '1720907392257'
+  alias: Lights - Garage
+  description: Manage Garage lights based on Occupancy & time of day
+  triggers:
+  - entity_id: sensor.garage_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.garage_mode
+        state: early
+      sequence:
+      - target:
+          entity_id: script.garage_motion
+        action: script.turn_on
+        data: {}
+    - conditions:
+      - condition: state
+        entity_id: sensor.garage_mode
+        state: late
+      sequence:
+      - target:
+          entity_id: script.garage_door_open
+        action: script.turn_on
+        data: {}
+    default:
+    - target:
+        entity_id: light.zigbee_group_garage
+      action: light.turn_off
+      data: {}
+
+- id: '1721955381870'
+  alias: Lights - Drone Room
+  description: Turn on Drone Room lights on motion, turn off when clear
+  triggers:
+  - entity_id: binary_sensor.drone_room_motion_sensor_motion
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.drone_room_motion_sensor_motion
+        state: 'on'
+      - condition: state
+        entity_id: input_select.time_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_drone_room
+        action: script.energize
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.drone_room_motion_sensor_motion
+        state: 'on'
+      - condition: state
+        entity_id: input_select.time_mode
+        state: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_drone_room
+        action: script.dimmed
+    default:
+    - target:
+        entity_id: light.zigbee_group_drone_room
+      action: light.turn_off
+
+- id: '1723048236278'
+  alias: Lights - Front Porch
+  description: Turn Front Porch lights on or off based on front_porch_mode sensor
+  triggers:
+  - entity_id: sensor.front_porch_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.front_porch_mode
+        state: 'on'
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_front_porch
+        action: script.white_relax
+    default:
+    - target:
+        entity_id: light.zigbee_group_front_porch
+      action: light.turn_off
+  mode: single
+
+- id: '1723846212553'
+  alias: Notify - Driveway
+  description: Send an actionable notification when an animal, person, or vehicle
+    is spotted in the driveway
+  triggers:
+  - entity_id: binary_sensor.driveway_animal
+    from: 'off'
+    to: 'on'
+    trigger: state
+  - entity_id:
+    - binary_sensor.driveway_person_stable
+    from:
+    to:
+    - 'on'
+    trigger: state
+  - entity_id: binary_sensor.driveway_vehicle
+    from: 'off'
+    to: 'on'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.driveway_animal
+        state: 'on'
+      sequence:
+      - data:
+          message: Animal spotted in Driveway
+          data:
+            image: /api/camera_proxy/camera.driveway_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/garage
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+        action: notify.phone_list
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.driveway_person
+        state: 'on'
+      sequence:
+      - data:
+          message: Person spotted in Driveway
+          data:
+            image: /api/camera_proxy/camera.driveway_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/garage
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+        action: notify.phone_list
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.driveway_vehicle
+        state: 'on'
+      sequence:
+      - data:
+          message: Vehicle spotted in Driveway
+          data:
+            image: /api/camera_proxy/camera.driveway_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/garage
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+        action: notify.phone_list
+  mode: single
+
+- id: '1724008608277'
+  alias: Notify - Front Door
+  description: Send notifications for package, person, or doorbell press.
+  triggers:
+  - id: package
+    trigger: state
+    entity_id: binary_sensor.doorbell_package
+    to: 'on'
+  - id: visitor
+    trigger: state
+    entity_id: binary_sensor.doorbell_visitor
+    to: 'on'
+  - id: person
+    trigger: state
+    entity_id: binary_sensor.front_door_person_stable
+    to: 'on'
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: package
+      sequence:
+      - action: notify.phone_list
+        data:
+          message: Package on Front Porch
+          data:
+            image: /api/camera_proxy/camera.doorbell_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/frontporch
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+      - action: assist_satellite.announce
+        target:
+          entity_id: assist_satellite.ha_voice_assist_satellite_living_room
+        data:
+          message: Package at the Front Door
+    - conditions:
+      - condition: trigger
+        id: person
+      sequence:
+      - action: notify.phone_list
+        data:
+          message: Person on Front Porch
+          data:
+            image: /api/camera_proxy/camera.doorbell_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/frontporch
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+    - conditions:
+      - condition: trigger
+        id: visitor
+      sequence:
+      - action: notify.phone_list
+        data:
+          message: Someone rang the doorbell
+          data:
+            image: /api/camera_proxy/camera.doorbell_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/frontporch
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+      - action: assist_satellite.announce
+        target:
+          entity_id: assist_satellite.ha_voice_assist_satellite_living_room
+        data:
+          message: Ding Dong! Someone is at the Front Door
+          preannounce: false
+  mode: single
+
+- id: '1725562375436'
+  alias: Lights - Driveway
+  description: Turn on driveway floods at night if garage door is open or motion detected
+  triggers:
+  - entity_id: cover.main_garage_door
+    to: open
+    trigger: state
+  - entity_id: cover.side_garage_door
+    to: open
+    trigger: state
+  - entity_id:
+    - binary_sensor.driveway_person_stable
+    to:
+    - 'on'
+    trigger: state
+  - entity_id: binary_sensor.driveway_vehicle
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.smoothed_irradiance
+    below: 10
+  actions:
+  - target:
+      entity_id: group.driveway_floods
+    action: homeassistant.turn_on
+    data: {}
+  - wait_for_trigger:
+    - entity_id: cover.main_garage_door
+      to: closed
+      trigger: state
+    timeout: 00:05:00
+    continue_on_timeout: true
+  - target:
+      entity_id: group.driveway_floods
+    action: homeassistant.turn_off
+    data: {}
+  mode: restart
+
+- id: '1725815855595'
+  alias: Lights - Patio
+  description: Control garage wall lights based on solar radiation and back door lock
+    status
+  triggers:
+  - entity_id: sensor.patio_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.patio_mode
+        state: early
+      sequence:
+      - target:
+          entity_id: light.zigbee_group_patio
+        data:
+          color_temp: "{{ states('sensor.outdoor_temperature_mired') | int }}"
+          brightness_pct: 75
+        action: light.turn_on
+    - conditions:
+      - condition: state
+        entity_id: sensor.patio_mode
+        state: late
+      sequence:
+      - target:
+          entity_id: script.garage_wall_night
+        action: script.turn_on
+        data: {}
+    default:
+    - target:
+        entity_id: light.zigbee_group_patio
+      action: light.turn_off
+      data: {}
+  mode: single
+
+- id: '1725851554861'
+  alias: Home - Arriving
+  description: Manage vacuums, HVAC, and Lights for when I return home
+  triggers:
+  - entity_id: zone.home
+    from: 0
+    to: 1
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sun.sun
+        state: above_horizon
+      sequence:
+      - action: script.arriving_day
+        metadata: {}
+        data: {}
+    - conditions:
+      - condition: state
+        entity_id: sun.sun
+        state: below_horizon
+      sequence:
+      - action: script.arriving_night
+        metadata: {}
+        data: {}
+  - action: input_select.select_option
+    metadata: {}
+    data:
+      option: awake
+    target:
+      entity_id: input_select.home_mode
+  mode: single
+
+- id: '1726091375798'
+  alias: Vacuum - Main Floor
+  description: Automatically start the Dreame main floor vacuum at noon on weekdays
+  triggers:
+  - at: '14:00:00'
+    trigger: time
+  conditions:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: numeric_state
+    entity_id: sensor.d10_plus_gen_2_main_floor_battery_level
+    above: 50
+  actions:
+  - action: script.vacuum_clean_entire_floor
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_main_floor
+  mode: single
+
+- id: '1726100649026'
+  alias: Input Select - Bedtime
+  description: Activates Bedtime script and sets binary flag when Bedtime event is
+    triggered
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  actions:
+  - action: input_select.select_option
+    metadata: {}
+    data:
+      option: bedtime
+    target:
+      entity_id: input_select.home_mode
+  - action: script.bedtime_winter
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1726100671948'
+  alias: Input Select - Awake
+  description: Turns off the binary flag when Awake event is triggered
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  actions:
+  - action: script.awake_2
+    metadata: {}
+    data: {}
+  - action: input_select.select_option
+    metadata: {}
+    data:
+      option: awake
+    target:
+      entity_id: input_select.home_mode
+  - action: script.event_clothing_suggestion
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1726252006400'
+  alias: Vacuum - Upstairs
+  description: Automatically start the Dreame upstairs vacuum at 1pm on weekends
+  triggers:
+  - at: '13:00:00'
+    trigger: time
+  conditions:
+  - condition: time
+    weekday:
+    - sat
+    - sun
+  - condition: numeric_state
+    entity_id: sensor.d10_plus_gen_2_upstairs_battery_level
+    above: 50
+  actions:
+  - action: script.vacuum_clean_entire_floor
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+  mode: single
+
+- id: '1726716727349'
+  alias: Meditation - Start
+  description: When I begin meditation, scanning the NFC tag will turn off the lights
+    in the Meditation Room
+  triggers:
+  - tag_id: [tag_id]
+    trigger: tag
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.is_meditating
+    data: {}
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.zigbee_group_meditation
+  mode: single
+
+- id: '1726716865596'
+  alias: Meditation - Finish
+  description: When tag is scanned at the end of Meditation, turn off the input boolean
+    and turn the lights on in the Meditation Room
+  triggers:
+  - tag_id: [tag_id]
+    trigger: tag
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.is_meditating
+    data: {}
+  - action: light.turn_on
+    metadata: {}
+    data:
+      kelvin: 2569
+      brightness_pct: 5
+      transition: 15
+    target:
+      entity_id:
+      - light.zigbee_group_meditation
+  mode: single
+
+- id: '1726762029569'
+  alias: Notify - Garage Door
+  description: Send a notification if the Garage Door has been open for 15 minutes
+    or more
+  triggers:
+  - entity_id:
+    - cover.main_garage_door
+    to: open
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      title: Garage Door is open
+      message: Garage Door has been open for 15 minutes; shut it?
+      data:
+        actions:
+        - action: CLOSE_GARAGE_DOOR
+          title: Close Garage Door
+    action: notify.phone_list
+  - wait_for_trigger:
+    - event_type: mobile_app_notification_action
+      event_data:
+        action: CLOSE_GARAGE_DOOR
+      trigger: event
+  - target:
+      entity_id: cover.main_garage_door
+    action: cover.close_cover
+  mode: single
+
+- id: '1726771306419'
+  alias: Notify - Garage Open and Person Detected
+  description: Sends a notification when the garage door is open and a person is detected
+    in the driveway.
+  triggers:
+  - entity_id:
+    - binary_sensor.driveway_person_stable
+    to:
+    - 'on'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: cover.main_garage_door
+    state: open
+  actions:
+  - data:
+      title: Garage Alert
+      message: Garage Door is open and a person is detected in the driveway
+    action: notify.phone_list
+  mode: single
+
+- id: '1727133389819'
+  alias: Notify - Door Open while Away
+  description: Notify my phone if any outside doors open while I'm away
+  triggers:
+  - entity_id:
+    - binary_sensor.back_door_contact_sensor
+    - binary_sensor.basement_door_contact_sensor
+    - binary_sensor.front_door_contact_sensor
+    - binary_sensor.garage_door_contact_sensor
+    - binary_sensor.side_door_contact_sensor
+    - binary_sensor.laundry_door_contact_sensor
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: zone.home
+    state: '0'
+  actions:
+  - data:
+      title: Door Alert
+      message: "{{ trigger.to_state.name }} has been opened while you're away!"
+    action: notify.phone_list
+  mode: single
+
+- id: '1728837482940'
+  alias: Input Select - Reading
+  description: Activates Reading script on NFC tag scan
+  triggers:
+  - tag_id: [tag_id]
+    trigger: tag
+  conditions: []
+  actions:
+  - target:
+      entity_id: script.bedroom_reading
+    action: script.turn_on
+    data: {}
+  - action: input_select.select_option
+    metadata: {}
+    data:
+      option: reading
+    target:
+      entity_id: input_select.home_mode
+  mode: restart
+
+- id: '1729543822872'
+  alias: Notify - Garage Break-In
+  description: Send notification if either of the side doors to the garages are opened
+  triggers:
+  - entity_id: binary_sensor.side_garage_side_door_contact_sensor
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.main_garage_side_door_contact_sensor
+    to: 'on'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.side_garage_side_door_contact_sensor
+        state: 'on'
+      sequence:
+      - data:
+          message: Someone is breaking into the garage through the Side Garage side
+            door!
+          title: Garage Break-In
+        action: notify.phone_list
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.main_garage_side_door_contact_sensor
+        state: 'on'
+      sequence:
+      - data:
+          message: Someone is breaking into the garage through the Main Garage side
+            door!
+          title: Garage Break-In
+        action: notify.phone_list
+
+- id: '1730414063631'
+  alias: Lights - Hall Closet
+  description: Turn on hallway light when door opens, turn off when door closes
+  triggers:
+  - entity_id: binary_sensor.hallway_closet_contact_sensor
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.hallway_closet_contact_sensor
+    to: 'off'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hallway_closet_contact_sensor
+        state: 'on'
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_hallway
+        action: script.energize
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hallway_closet_contact_sensor
+        state: 'off'
+      sequence:
+      - target:
+          entity_id: light.zigbee_group_hallway
+        action: light.turn_off
+  mode: single
+
+- id: '1732421451632'
+  alias: Lights - Movie
+  description: Trigger movie script
+  triggers:
+  - entity_id: input_boolean.movie_time
+    to: 'on'
+    trigger: state
+  actions:
+  - action: script.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: script.movies
+  mode: single
+
+- id: '1732684048507'
+  alias: Lights - Living Room
+  triggers:
+  - trigger: state
+    entity_id: sensor.living_room_mode
+    to: early
+    id: early
+  - trigger: state
+    entity_id: sensor.living_room_mode
+    to: late
+    id: late
+  - trigger: state
+    entity_id: sensor.living_room_mode
+    to: 'off'
+    id: 'off'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.movie_time
+    state: 'off'
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_living_room
+        action: script.energize
+    - conditions:
+      - condition: trigger
+        id: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_living_room
+        action: script.white_relax
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - target:
+          entity_id: light.zigbee_group_living_room
+        action: light.turn_off
+  mode: single
+
+- id: '1732772312591'
+  alias: Lights - Bathroom
+  triggers:
+  - entity_id: sensor.bathroom_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.bathroom_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_bathroom
+        action: script.energize
+    - conditions:
+      - condition: state
+        entity_id: sensor.bathroom_mode
+        state: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_bathroom
+        action: script.dimmed
+    default:
+    - target:
+        entity_id: light.zigbee_group_bathroom
+      action: light.turn_off
+
+- id: '1732772412133'
+  alias: Lights - Bedroom
+  triggers:
+  - entity_id: sensor.bedroom_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.bedroom_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_bedroom
+        action: script.energize
+    - conditions:
+      - condition: state
+        entity_id: sensor.bedroom_mode
+        state: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_bedroom
+        action: script.white_relax
+    default:
+    - target:
+        entity_id: light.zigbee_group_bedroom
+      action: light.turn_off
+
+- id: '1732772626979'
+  alias: Lights - Master Bath
+  triggers:
+  - entity_id: sensor.master_bath_mode
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.master_bath_mode
+        state: early
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_main_bath
+        action: script.white_relax
+    - conditions:
+      - condition: state
+        entity_id: sensor.master_bath_mode
+        state: late
+      sequence:
+      - data:
+          target_lights: light.zigbee_group_main_bath
+        action: script.dimmed
+    default:
+    - condition: state
+      entity_id: binary_sensor.master_bath_ep1_occupancy
+      state: 'off'
+    - target:
+        entity_id: light.zigbee_group_main_bath
+      action: light.turn_off
+  mode: single
+
+- id: '1732915071782'
+  alias: Dryer Running - Start
+  description: Trigger Dryer Running
+  triggers:
+  - entity_id: binary_sensor.dryer_vibration_sensor_vibration
+    to: 'on'
+    for: 00:01:00
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: input_boolean.dryer_running
+    state: 'off'
+  actions:
+  - target:
+      entity_id: input_boolean.dryer_running
+    action: input_boolean.turn_on
+
+- id: '1732915104137'
+  alias: Dryer Running - Stop
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.dryer_vibration_sensor_vibration
+    from: 'on'
+    to: 'off'
+    for: 00:02:00
+    trigger: state
+  conditions: []
+  actions:
+  - target:
+      entity_id: input_boolean.dryer_running
+    action: input_boolean.turn_off
+    data: {}
+
+- id: '1732915223510'
+  alias: Notify - Dryer
+  description: ''
+  triggers:
+  - entity_id: input_boolean.dryer_running
+    from: 'on'
+    to: 'off'
+    trigger: state
+  actions:
+  - data:
+      message: Dryer Finished
+      title: Current dryer load is done
+    action: notify.phone_list
+
+- id: '1733238594053'
+  alias: Notify - Leak Detected
+  description: Notify when a leak is detected
+  triggers:
+  - entity_id:
+    - binary_sensor.basement_water_leak_sensor_water_leak_detected
+    - binary_sensor.bathroom_water_leak_sensor_water_leak_detected
+    - binary_sensor.kitchen_sink_water_leak_sensor_water_leak_detected
+    - binary_sensor.master_bath_water_leak_sensor_water_leak_detected
+    - binary_sensor.main_garage_water_leak_sensor_water_leak_detected
+    - binary_sensor.side_garage_water_leak_sensor_water_leak_detected
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: "{{ (as_timestamp(now()) - as_timestamp(state_attr('automation.notify_leak_detected', last_triggered') | default(0))) > 3600 }}"
+  actions:
+  - target:
+      entity_id: input_boolean.leak_detected
+    action: input_boolean.turn_on
+  - data:
+      title: Water Leak Detected
+      message: Water leak detected by {{ trigger.to_state.attributes.friendly_name
+        }}. Do you want to reset the alert?
+      data:
+        actions:
+        - action: RESET_LEAK
+          title: Reset Leak Alert
+    action: notify.phone_list
+  - wait_for_trigger:
+    - event_type: mobile_app_notification_action
+      event_data:
+        action: RESET_LEAK
+      trigger: event
+  - target:
+      entity_id: input_boolean.leak_detected
+    action: input_boolean.turn_off
+  mode: single
+
+- id: '1733775855694'
+  alias: Event - Dog Out Potty
+  description: Update an Input Datetime to indicate when Dog last went potty
+  triggers:
+  - tag_id: [tag_id]
+    trigger: tag
+  - entity_id: binary_sensor.backyard_motion_sensor_motion
+    to: 'on'
+    trigger: state
+  conditions: []
+  actions:
+  - target:
+      entity_id: input_datetime.dog_out_potty_last_time
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    action: input_datetime.set_datetime
+  mode: single
+
+- id: '1734547817102'
+  alias: Notify - Snow Forecasted
+  description: Turns on the lawn charger if snow is forecasted at 5 AM and sends a
+    notification.
+  triggers:
+  - at: 05:00:00
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.snow_forecasted
+    state: 'on'
+  actions:
+  - target:
+      entity_id: switch.lawn_charger
+    action: switch.turn_on
+  - data:
+      message: Snow is forecasted. The lawn charger has been turned on.
+    action: notify.phone_list
+  mode: single
+
+- id: '1734569760321'
+  alias: Notify - Charger Turned Off
+  description: Turn off the lawn charger switch and notify when the current stays
+    at 0 for 1 minute.
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.lawn_charger_current
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    below: 0.2
+  conditions: []
+  actions:
+  - target:
+      entity_id: switch.lawn_charger
+    action: switch.turn_off
+    data: {}
+  - data:
+      title: Lawn Charger Turned Off
+      message: The lawn charger was turned off because the current remained at 0 for
+        1 minute.
+    action: notify.phone_list
+  mode: single
+
+- id: '1734928483291'
+  alias: Sentence - Movie Time (On)
+  description: Allow Voice Assist to run Movie Time Automation
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on Movie Time
+    - It's Movie Time
+    - Movie Time
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.movie_time
+  mode: single
+
+- id: '1734928588206'
+  alias: Sentence - Movie Time (Off)
+  description: Voice Assist to turn off Movie Time
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn off Movie Time
+    - The movie is over
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.movie_time
+  - action: script.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: script.living_room_white_relax
+  mode: single
+
+- id: '1734928838063'
+  alias: Sentence - Outside Temperature
+  description: Tell me the temperature outside
+  triggers:
+  - trigger: conversation
+    command:
+    - What is the temperature outside
+    - How cold is it outside
+    - How hot is it outside
+  conditions: []
+  actions:
+  - set_conversation_response: Current temperature outside is {{ states('sensor.ws2902_weather_temperature')
+      | round(0) }}°F, and the Feels Like temperature is {{ states('sensor.pirateweather_apparent_temperature')
+      | round(0) }}°F.
+  mode: single
+
+- id: '1734929056367'
+  alias: Sentence - Living Room Lights (On - Day)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on the Living Room Lights
+    - Turn on Living Room Lights
+    - Turn the Living Room Lights on
+  conditions:
+  - condition: state
+    entity_id: input_select.time_mode
+    state:
+    - early
+  actions:
+  - data:
+      target_lights: light.zigbee_group_living_room
+    action: script.energize
+  mode: single
+
+- id: '1734930057321'
+  alias: Sentence - Dryer
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Is the Dryer Running
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if is_state('input_boolean.dryer_running', 'on')
+      %}\n  The dryer is currently running.\n{% else %}\n  The dryer is not running
+      right now.\n{% endif %}"
+  mode: single
+
+- id: '1734930209204'
+  alias: Sentence - Washer
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Is the Washing Machine Running
+    - Is the Washer running
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if is_state('switch.washing_machine_switch', 'on')
+      and\n   is_state('binary_sensor.washing_machine_running', 'on') %}\n  The Washing
+      Machine is on, and running\n{% elif is_state('switch.washing_machine_switch',
+      'on') and\n   not is_state('binary_sensor.washing_machine_running', 'on') %}\n
+      \  The Washing Machine is on, but not currently running\n{% else %}\n  The Washing
+      Machine is off\n{% endif %}"
+  mode: single
+
+- id: '1734930618770'
+  alias: Sentence - Christmas Tree (On)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on the Christmas Tree
+    - Turn on Christmas Tree
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.christmas_tree_all
+  mode: single
+
+- id: '1734930661918'
+  alias: Sentence - Christmas Tree (Off)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn off the Christmas Tree
+    - Turn off Christmas Tree
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.christmas_tree_all
+  mode: single
+
+- id: '1734931765787'
+  alias: Sentence - Upstairs Script
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - I'm going to bed
+    - It's bedtime
+    - I'm going upstairs
+  conditions: []
+  actions:
+  - action: script.upstairs
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1734932151637'
+  alias: Sentence - Back Door (Unlock)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Unlock the Back Door
+  conditions: []
+  actions:
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.back_door_lock
+  mode: single
+
+- id: '1734932193048'
+  alias: Sentence - Back Door (Lock)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Lock the Back Door
+  conditions: []
+  actions:
+  - action: lock.lock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.back_door_lock
+  mode: single
+
+- id: '1734932311140'
+  alias: Sentence - Back Door (Lock Status)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Is the Back Door Locked
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if is_state('lock.back_door_lock', 'locked') %}\n
+      \ The Back Door is locked.\n{% else %}\n  The Back Door is unlocked.\n{% endif
+      %}"
+  mode: single
+
+- id: '1734932402503'
+  alias: Sentence - Front Door (Lock Status)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Is the Front Door Locked
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if is_state('lock.front_door_lock', 'locked') %}\n
+      \ The Front Door is locked.\n{% else %}\n  The Front Door is unlocked.\n{% endif
+      %}"
+  mode: single
+
+- id: '1734932428404'
+  alias: Sentence - Front Door (Lock)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Lock the Front Door
+  conditions: []
+  actions:
+  - action: lock.lock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.front_door_lock
+  mode: single
+
+- id: '1734932458969'
+  alias: Sentence - Front Door (Unlock)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Unlock the Front Door
+  conditions: []
+  actions:
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.front_door_lock
+  mode: single
+
+- id: '1734932969129'
+  alias: Sentence - Fireplace (Off)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn off the Fireplace
+    - Turn off Fireplace
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fireplace
+  mode: single
+
+- id: '1734932999448'
+  alias: Sentence - Fireplace (On)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on the fireplace
+    - Turn on Fireplace
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fireplace
+  mode: single
+
+- id: '1734933168012'
+  alias: Sentence - Drone Charger (On)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Charge my drones
+    - Turn on the Drone charger
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.drone_charger
+  mode: single
+
+- id: '1734933727134'
+  alias: Sentence - Living Room Lights (On - Night)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on the Living Room Lights
+    - Turn on Living Room Lights
+    - Turn the Living Room lights on
+  conditions:
+  - condition: state
+    entity_id: sensor.living_room_mode
+    state: late
+  actions:
+  - data:
+      target_lights: light.zigbee_group_living_room
+    action: script.white_relax
+  mode: single
+
+- id: '1734933996080'
+  alias: Sentence - Outside Humidity
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - How humid is it outside
+    - What is the humidity outside
+    - How humid is it out
+    - How high is the humidity
+    - How high is the humidity outside
+  conditions: []
+  actions:
+  - set_conversation_response: Current humidity outside is {{ states('sensor.ws2902_weather_humidity') | round(0) }} percent
+  mode: single
+
+- id: '1734934140924'
+  alias: Sentence - Inside Humidity
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - What's the current humidity
+    - What's the current humidity inside
+    - What's the current humidity in the house
+    - How humid is the house
+  conditions: []
+  actions:
+  - set_conversation_response: Current humidity inside is {{ states('sensor.main_floor_humidity') | round(0) }} percent
+  mode: single
+
+- id: '1734984535010'
+  alias: Sentence - Weather Report
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - How is the weather
+    - What's the weather
+    - What's the weather like outside
+    - What's the weather like
+    - How is it outside
+    - Weather report
+  conditions: []
+  actions:
+  - set_conversation_response: "{% set rain = states('sensor.ws2902_weather_precipitation_intensity')
+      | float(0) %}\n{% set snow = states('sensor.pirateweather_current_day_snow_accumulation')
+      | float(0) %}\n{% set ice = states('sensor.pirateweather_current_day_ice_accumulation')
+      | float(0) %}\n{% set rain_status = \n  \"Rain intensity is currently at \"
+      ~ rain ~ \" inches per hour\" if rain > 0 else \n  \"No rain at the moment.\"
+      %}\n{% set snow_status = \n  \"Snow accumulation today is \" ~ snow ~ \" inches\"
+      if snow > 0 else \n  \"No snow accumulation today.\" %}\n{% set ice_status =
+      \n  \"Ice accumulation today is \" ~ ice ~ \" inches\" if ice > 0 else \n  \"No
+      ice accumulation today.\" %}\n\nCurrent temperature outside is {{ states('sensor.ws2902_weather_temperature')
+      | round(0) }}°F, \nand it Feels Like {{ states('sensor.pirateweather_apparent_temperature')
+      | round(0) }}°F,\nthe Humidity is {{ states('sensor.ws2902_weather_humidity')
+      }} %,\nwith a Wind Speed of {{ states('sensor.ws2902_weather_wind_speed')}}
+      mph,\nand {{ rain_status }} and {{ snow_status }} and {{ ice_status }}."
+  mode: single
+
+- id: '1734986236919'
+  alias: Sentence - Air Quality
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - How's the outdoor Air Quality
+    - How's the Air Quality
+    - What's the Air Quality score
+  conditions: []
+  actions:
+  - set_conversation_response: "The current AQI score is {{ states('sensor.outdoor_aqi') }} "
+  mode: single
+
+- id: '1734986563699'
+  alias: Sentence - Face Mask
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Do I need a face mask outside
+    - Should I wear a face mask
+    - Should I wear a face mask outside
+    - Do I need a face mask
+    - Do I need a mask today
+    - Do I need a mask
+    - Should I wear a mask today
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if states('sensor.outdoor_aqi') | float >= 101
+      \n     or states('sensor.o_1pst_pm10') | float >= 25\n     or states('sensor.o_1pst_pm2_5')
+      | float >= 25 %}\n  Yes, wear a mask due to Air Quality concerns\n{% else %}\n
+      \ It appears a mask is not necessary today\n{% endif %}"
+  mode: single
+
+- id: '1734986821603'
+  alias: Sentence - Back Door (Open)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Is the Back Door open
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if states('binary_sensor.back_door_contact_sensor','off')
+      %}\n  No, the Back Door is closed\n{% else %}\n  Yes, the Back Door is open\n{%
+      endif %}"
+  mode: single
+
+- id: '1734986882058'
+  alias: Sentence - Front Door (Open)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command: Is the Front Door Open
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if states('binary_sensor.front_door_contact_sensor','off')
+      %}\n  No, the Front Door is closed\n{% else %}\n  Yes, teh Front Door is open\n{%
+      endif %}"
+  mode: single
+
+- id: '1734986970722'
+  alias: Sentence - Side Door (Open)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Is the Side Door open
+    - Is the Drone Room Door open
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if states('binary_sensor.side_door_contact_sensor','off')
+      %}\n  No, the Side Door is closed\n{% else %}\n  Yes, the Side Door is open\n{%
+      endif %}"
+  mode: single
+
+- id: '1734987094798'
+  alias: Sentence - Washer (Turn On)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Turn on the Washing Machine
+    - Turn on the Washer
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.washing_machine_switch
+  mode: single
+
+- id: '1734987719111'
+  alias: Sentence - Vacuum (Main Floor)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Run the Main Floor Vacuum
+    - Start the Main Floor Vacuum
+  conditions: []
+  actions:
+  - action: script.vacuum_main_floor
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1734988159950'
+  alias: Sentence - Lawn Charger
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Charge the Snow Blower
+    - Charge the Lawn Mower
+    - Charge the Leaf Blower
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.lawn_charger
+  mode: single
+
+- id: '1734989361217'
+  alias: Sentence - Windy
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Is it windy outside
+    - Is it windy
+    - How windy is it outside
+    - How windy is it
+  conditions: []
+  actions:
+  - set_conversation_response: "{% if states('sensor.ws2902_weather_wind_speed') |
+      float >= 75 %}\n  There are currently Hurricane Force winds outside\n{% elif
+      states('sensor.ws2902_weather_wind_speed') | float >= 64 %}\n  There are currently
+      Storm Force winds outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 55 %}\n  There are currently Whole Gale winds outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 47 %}\n  There are currently Strong Gale winds outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 39 %}\n  There are currently Gale winds outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 32 %}\n  There are currently Storm Force winds outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 25 %}\n  There is currently a Strong Breeze outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 19 %}\n  There is currently a Fresh Breeze outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 13 %}\n  There is currently a Moderate Breeze outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 8 %}\n  There is currently a Gentle Breeze outside\n{% elif states('sensor.ws2902_weather_wind_speed')
+      | float >= 4 %}\n  There is currently a Light Breeze outside\n{% else %}\n  It
+      is calm outside\n{% endif %}"
+  mode: single
+
+- id: '1734990375913'
+  alias: Notify - Garage Door Opened
+  description: Notify me when the Garage Door Opens, if I am home
+  triggers:
+  - trigger: state
+    entity_id:
+    - cover.main_garage_door
+    to: opening
+    from: closed
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.living_room_ep1_occupancy
+    state: 'on'
+  actions:
+  - action: notify.phone_list
+    metadata: {}
+    data:
+      message: Garage door just opened
+      title: Garage Door Open
+  - action: assist_satellite.announce
+    metadata: {}
+    data:
+      message: The garage door just opened
+    target:
+      entity_id: assist_satellite.ha_voice_assist_satellite_living_room
+  mode: single
+
+- id: '1735063882482'
+  alias: Sentence - Living Room Lights (Lower)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Lower the Living Room Lights
+    - It's too bright in the Living Room
+    - It's bright in here
+  conditions: []
+  actions:
+  - data:
+      target_lights: light.zigbee_group_living_room
+    action: script.white_relax
+  mode: single
+
+- id: '1735419637439'
+  alias: Lights - Nightlight
+  description: Turn on nightlight to red at 5% when motion is detected during bedtime.
+  triggers:
+  - entity_id: binary_sensor.master_bath_motion_bedtime
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: input_select.home_mode
+    state:
+    - bedtime
+  actions:
+  - target:
+      entity_id: light.main_bath_nightlight_light
+    data:
+      brightness_pct: 10
+      color_name: red
+    action: light.turn_on
+  - wait_for_trigger:
+    - entity_id: binary_sensor.master_bath_motion_bedtime
+      to: 'off'
+      trigger: state
+    continue_on_timeout: false
+  - delay: 00:00:15
+  - target:
+      entity_id: light.main_bath_nightlight_light
+    action: light.turn_off
+    data: {}
+  mode: restart
+
+- id: '1735502085603'
+  alias: Notify - Weather Alert
+  description: Sends a notification when a weather alert occurs
+  triggers:
+  - entity_id: sensor.[county]
+    from: '0'
+    to: '1'
+    trigger: state
+  actions:
+  - action: notify.phone_list
+    data:
+      message: "{% set alerts = state_attr('sensor.[county]', 'alerts') %} {% if alerts
+        == [] or alerts is none %}\n  No alerts\n{% else %}\n  {{ alerts[0]['severity']
+        + ' ' + alerts[0]['title'] }}\n{% endif %}\n"
+      data:
+        actions:
+        - action: URI
+          title: Open HA
+          uri: /dashboard-mushroom/house
+        - action: URI
+          title: Open NWS
+          uri: https://forecast.weather.gov/MapClick.php?lat=[latitude]&lon=[longitude]
+  mode: single
+
+- id: '1738961973962'
+  alias: Lock - Unlock Back Door
+  description: ''
+  triggers:
+  - entity_id: cover.main_garage_door
+    to: opening
+    trigger: state
+  conditions:
+  - condition: numeric_state
+    entity_id: zone.home
+    above: 0
+  actions:
+  - target:
+      entity_id: lock.back_door_lock
+    action: lock.unlock
+  mode: single
+
+- id: '1739324635864'
+  alias: Vacuum - Basement
+  description: Automatically start the Dreame basement vacuum at noon
+  triggers:
+  - at: '12:00:00'
+    trigger: time
+  conditions:
+  - condition: time
+    weekday:
+    - mon
+    - wed
+    - fri
+    - sun
+    - tue
+    - thu
+    - sat
+  - condition: numeric_state
+    entity_id: sensor.d10_plus_gen_2_basement_battery_level
+    above: 40
+  actions:
+  - action: script.vacuum_clean_entire_floor
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_basement
+  mode: single
+
+- id: '1739324699091'
+  alias: Sentence - Vacuum (Basement)
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Run the Basement Vacuum
+    - Start the Basement Vacuum
+  conditions: []
+  actions:
+  - action: script.vacuum_basement
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1741707176423'
+  alias: Event - Feed Cat
+  triggers:
+  - at: '07:00:00'
+    trigger: time
+  - at: '17:00:00'
+    trigger: time
+  - at: '22:30:00'
+    trigger: time
+  actions:
+  - action: script.event_feed_cat
+  - choose:
+    - conditions:
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: button.cat_feeder_feed
+          state: unavailable
+      sequence:
+      - action: notify.phone_list
+        data:
+          title: Cat's Feeding Time
+          message: ✅ Food has been dispensed!
+    - conditions:
+      - condition: state
+        entity_id: button.cat_feeder_feed
+        state: unavailable
+      sequence:
+      - action: notify.phone_list
+        data:
+          title: ⚠️ Feeding Failed
+          message: ❌ Feeder was unavailable at feeding time!
+  mode: single
+
+- id: '1741925759464'
+  alias: Garage - Close Main
+  description: ''
+  triggers:
+  - entity_id: cover.main_garage_door
+    to: open
+    for: 00:15:00
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.garage_ep1_occupancy
+    state: 'off'
+  actions:
+  - target:
+      entity_id: cover.main_garage_door
+    action: cover.close_cover
+  mode: single
+
+- id: '1741925794700'
+  alias: Garage - Close Side
+  description: ''
+  triggers:
+  - entity_id: cover.side_garage_door
+    to: open
+    for: 00:15:00
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.garage_ep1_occupancy
+    state: 'off'
+  actions:
+  - target:
+      entity_id: cover.side_garage_door
+    action: cover.close_cover
+  mode: single
+
+- id: '1742239055767'
+  alias: Event - Fireplace Control
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.fireplace_mode
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.fireplace_mode
+        state: 'on'
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.fireplace
+    default:
+    - action: switch.turn_off
+      target:
+        entity_id: switch.fireplace
+  mode: restart
+
+- id: '1744048284189'
+  alias: Notify - Fire Alarm Triggered
+  description: Notify when the Zigbee Firefighter detects a fire alarm
+  triggers:
+  - entity_id: binary_sensor.ecolink_firefighter
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      title: "\U0001F6A8 Fire Alarm Detected"
+      message: The Firefighter sensor has detected a fire alarm!
+      data:
+        push:
+          sound: default
+    action: notify.phone_list
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - lock.back_door_lock
+      - lock.front_door_lock
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      floor_id:
+      - main_floor
+      - top_floor
+  mode: single
+
+- id: '1746744910900'
+  alias: Washing Machine - Turn On
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.basement_door_contact_sensor
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: switch.washing_machine_switch
+    state: 'off'
+  actions:
+  - wait_for_trigger:
+    - entity_id: binary_sensor.laundry_door_contact_sensor
+      from: 'off'
+      to: 'on'
+      trigger: state
+    timeout: 00:03:00
+    continue_on_timeout: false
+  - target:
+      entity_id: switch.washing_machine_switch
+    action: switch.turn_on
+  mode: single
+
+- id: '1748039392247'
+  alias: Event - Dog Fed
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.dog_food_container
+    from: 'on'
+    to: 'off'
+  conditions: []
+  actions:
+  - target:
+      entity_id: input_datetime.dog_fed_last_time
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    action: input_datetime.set_datetime
+  mode: single
+
+- id: '1748042064320'
+  alias: Event - Cleaned Litterbox
+  description: When KLB NFC Tag is scanned, update the value for it and run the basement
+    vacuum
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: input_datetime.set_datetime
+    metadata: {}
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.cleaned_litterbox_time
+  - action: script.vacuum_clean_entire_floor
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_basement
+  mode: single
+
+- id: '1748447941318'
+  alias: Event - Watered Garden Bed
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: input_datetime.set_datetime
+    metadata: {}
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.garden_last_watered_time
+  mode: single
+
+- id: '1758243037694'
+  alias: Notify - Automation Ran
+  description: Sends a notification whenever any automation is triggered
+  triggers:
+  - event_type: automation_triggered
+    trigger: event
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.entity_id != 'automation.notify_automation_ran' }} "
+  actions:
+  - data:
+      title: Automation Triggered
+      message: 'Automation "{{ trigger.event.data.name }}" ({{ trigger.event.data.entity_id }}) just triggered. '
+    action: notify.phone_list
+  mode: queued
+
+- id: '1758402771586'
+  alias: Notify - Side Door
+  description: Send an actionable notification when an package or person is at Side
+    Door, or doorbell press
+  triggers:
+  - entity_id:
+    - binary_sensor.side_door_person_stable
+    to:
+    - 'on'
+    trigger: state
+  - entity_id:
+    - binary_sensor.side_door_doorbell
+    to: 'on'
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.side_door_person_stable
+        state: 'on'
+      sequence:
+      - data:
+          message: Person on Front Porch
+          data:
+            image: /api/camera_proxy/camera.side_door_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/frontporch
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+        action: notify.phone_list
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.side_door_doorbell
+        state: 'on'
+      sequence:
+      - data:
+          message: Someone rang the doorbell
+          data:
+            image: /api/camera_proxy/camera.side_door_fluent
+            actions:
+            - action: URI
+              title: Open HA
+              uri: /dashboard-mushroom/frontporch
+            - action: URI
+              title: Open Reolink
+              uri: app://com.mcu.reolink
+        action: notify.phone_list
+      - action: assist_satellite.announce
+        metadata: {}
+        data:
+          message: Ding Dong! Someone is at the Side Door
+        target:
+          entity_id: assist_satellite.ha_voice_assist_satellite_living_room
+  mode: single
+
+- id: '1758836860598'
+  alias: Vacuum - Bedroom (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+      segment: 2
+  mode: single
+
+- id: '1758836945327'
+  alias: Vacuum - Master Bath (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+      segment: 1
+  mode: single
+
+- id: '1758837012035'
+  alias: Vacuum - Office (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+      segment: 4
+  mode: single
+
+- id: '1758837056882'
+  alias: Vacuum - Meditation (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+      segment: 3
+  mode: single
+
+- id: '1758837123942'
+  alias: Vacuum - Bathroom (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_main_floor
+      segment: 1
+  mode: single
+
+- id: '1758837162559'
+  alias: Vacuum - Basement (Tag)
+  description: ''
+  triggers:
+  - trigger: tag
+    tag_id: [tag_id]
+  conditions: []
+  actions:
+  - action: script.vacuum_clean_entire_floor
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_basement
+  mode: single
+- id: '1759331431146'
+  alias: Notify - Devices Offline
+  description: Notify immediately when devices become unavailable (2-hour cooldown)
+  triggers:
+  - value_template: "{{ states('sensor.unavailable_devices') | trim | length > 0 }} "
+    trigger: template
+  conditions:
+  - condition: template
+    value_template: "{{ (as_timestamp(now()) - as_timestamp(this.last_triggered or 0)) > 7200 }}"
+  actions:
+  - data:
+      title: Offline Devices
+      message: "{{ states('sensor.unavailable_devices') }}"
+    action: notify.phone_list
+  mode: single
+
+- id: '1759951141707'
+  alias: Sentence - Clothing Suggestion
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - What should I wear today
+    - What should I wear
+  conditions: []
+  actions:
+  - action: script.event_clothing_suggestion
+    metadata: {}
+    data: {}
+  mode: single
+
+- id: '1760298637097'
+  alias: Vacuum - Main Bath (After Shower)
+  description: Run the vacuum in the main bath 5 minutes after the shower stops
+  triggers:
+  - entity_id: binary_sensor.shower_in_use
+    from: 'on'
+    to: 'off'
+    for: 00:05:00
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.library_door_contact_sensor
+    state: 'on'
+  - condition: state
+    entity_id: input_select.time_mode
+    state: early
+  actions:
+  - action: script.vacuum_clean_segment
+    data:
+      target_vacuum: vacuum.d10_plus_gen_2_upstairs
+      segment: 1
+  mode: single
+
+- id: '1761010151428'
+  alias: Security - Door Opened During Bedtime
+  description: Warns if any exterior door opens while bedtime mode is active.
+  triggers:
+  - entity_id:
+    - binary_sensor.back_door_contact_sensor
+    - binary_sensor.front_door_contact_sensor
+    - binary_sensor.side_door_contact_sensor
+    - binary_sensor.garage_door_contact_sensor
+    - binary_sensor.basement_door_contact_sensor
+    - binary_sensor.laundry_door_contact_sensor
+    - binary_sensor.side_garage_side_door_contact_sensor
+    - binary_sensor.main_garage_side_door_contact_sensor
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: input_select.home_mode
+    state: bedtime
+  actions:
+  - variables:
+      door_name: '{{ trigger.to_state.name }}'
+  - parallel:
+    - data:
+        target_lights: light.zigbee_group_living_room
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_kitchen
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_front_porch
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_garage
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_dining_room
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_bathroom
+      action: script.energize
+    - data:
+        target_lights: light.zigbee_group_bedroom
+      action: script.energize
+  - action: assist_satellite.announce
+    metadata: {}
+    data:
+      message: '"Caution: {{ door_name }} has been breached. This property is monitored, the owner is armed, and the police are on their way. Leave now!"'
+      preannounce: false
+    target:
+      entity_id:
+      - assist_satellite.home_assistant_voice_bedroom_assist_satellite
+      - assist_satellite.ha_voice_assist_satellite_living_room
+  - delay: 1
+  - data:
+      title: Security Alert
+      message: '{{ door_name }} was opened during bedtime mode!'
+    action: notify.phone_list
+  mode: parallel
+
+- id: '1761435623418'
+  alias: Sentence - Lock Back Doors
+  description: ''
+  triggers:
+  - trigger: conversation
+    command:
+    - Lock the back doors
+    - Lock the back door
+  conditions: []
+  actions:
+  - action: lock.lock
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - lock.back_door_lock
+      - lock.garage_handle_lock
+  mode: single
+
+- id: '1761691467401'
+  alias: Input Select - Time Mode
+  description: Switch between Early and Late based on the time of day
+  triggers:
+  - at: '09:00:00'
+    trigger: time
+  - at: '22:00:00'
+    trigger: time
+  actions:
+  - choose:
+    - conditions:
+      - condition: time
+        after: '09:00:00'
+        before: '22:00:00'
+      sequence:
+      - target:
+          entity_id: input_select.time_mode
+        data:
+          option: early
+        action: input_select.select_option
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: time
+          after: '22:00:00'
+        - condition: time
+          before: '09:00:00'
+      sequence:
+      - target:
+          entity_id: input_select.time_mode
+        data:
+          option: late
+        action: input_select.select_option
+  mode: single
+
+- id: '1761780486232'
+  alias: HVAC - HRV Smart Control
+  description: Turn HRV on/off based on CO2, humidity, occupancy, AQI, and outdoor
+    temp (with cooldown)
+  triggers:
+  - entity_id: binary_sensor.hrv_needs_on
+    to: 'on'
+    for:
+      minutes: 10
+    trigger: state
+  - entity_id: binary_sensor.hrv_needs_on
+    to: 'off'
+    for:
+      minutes: 15
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hrv_needs_on
+        state: 'on'
+      sequence:
+      - target:
+          entity_id: switch.hrv_plug
+        action: switch.turn_on
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hrv_needs_on
+        state: 'off'
+      sequence:
+      - target:
+          entity_id: switch.hrv_plug
+        action: switch.turn_off
+  mode: restart
+
+- id: '1762999711336'
+  alias: Notify - Clean Catbox
+  description: Sends a reminder if it's been 48+ hours since the litterbox was last
+    cleaned.
+  triggers:
+  - at: '20:00:00'
+    trigger: time
+  conditions:
+  - condition: template
+    value_template: "{% set last_cleaned = states('input_datetime.cleaned_litterbox_time')
+      %} {% if last_cleaned not in ['unknown', 'unavailable', 'none', ''] %}\n  {{
+      (as_timestamp(now()) - as_timestamp(last_cleaned)) >= 48 * 3600 }}\n{% else
+      %}\n  false\n{% endif %}\n"
+  actions:
+  - data:
+      title: "\U0001F408 Litterbox Reminder"
+      message: It’s been more than 48 hours since you last cleaned the litterbox!
+    action: notify.phone_list
+  mode: single
+
+- id: '1765762529269'
+  alias: HVAC - Temp Control
+  description: Sync Ecobee HVAC mode, temperature, and fan mode from helper sensors
+  triggers:
+  - entity_id:
+    - sensor.hvac_mode
+    - sensor.desired_indoor_temp
+    - sensor.fan_mode
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: "{{ states('sensor.hvac_mode') not in ['unknown', 'unavailable']
+      and\n   states('sensor.desired_indoor_temp') not in ['unknown', 'unavailable']
+      and\n   states('sensor.fan_mode') not in ['unknown', 'unavailable'] }}\n"
+  actions:
+  - target:
+      entity_id: climate.ecobee_thermostat
+    data:
+      hvac_mode: "{{ states('sensor.hvac_mode') }}"
+    action: climate.set_hvac_mode
+  - target:
+      entity_id: climate.ecobee_thermostat
+    data:
+      temperature: "{{ states('sensor.desired_indoor_temp') | int }}"
+    action: climate.set_temperature
+  - target:
+      entity_id: climate.ecobee_thermostat
+    data:
+      fan_mode: "{{ states('sensor.fan_mode') }}"
+    action: climate.set_fan_mode
+  mode: restart
+
+- id: '1767982703032'
+  alias: Lock - Mirror Garage Handle to Back Door
+  description: ''
+  triggers:
+  - entity_id: lock.back_door_lock
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: lock.back_door_lock
+        state: unlocked
+      sequence:
+      - target:
+          entity_id: lock.garage_handle_lock
+        action: lock.unlock
+    - conditions:
+      - condition: state
+        entity_id: lock.back_door_lock
+        state: locked
+      sequence:
+      - target:
+          entity_id: lock.garage_handle_lock
+        action: lock.lock
+  mode: single
+
+- id: '1768698715968'
+  alias: Washing Machine - Turn Off
+  description: Turn off the washing machine switch if it has not been running for
+    30 minutes
+  triggers:
+  - entity_id: binary_sensor.washing_machine_running
+    to: 'off'
+    for:
+      minutes: 30
+    trigger: state
+  conditions: []
+  actions:
+  - target:
+      entity_id: switch.washing_machine_switch
+    action: switch.turn_off
+  mode: single
