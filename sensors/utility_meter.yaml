@@ -1,0 +1,15 @@
+hrv_monthly_energy:
+  source: sensor.hrv_plug_summation_delivered
+  cycle: monthly
+
+air_purifier_monthly_energy:
+  source: sensor.air_purifier_plug_summation_delivered
+  cycle: monthly
+
+washer_monthly_energy:
+  source: sensor.washing_machine_summation_delivered
+  cycle: monthly
+
+fireplace_monthly_energy:
+  source: sensor.fireplace_summation_delivered
+  cycle: monthly
