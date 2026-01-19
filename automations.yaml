@@ -1,5 +1,4 @@
-- id: '1716869698728'
-  alias: Home - Leaving
+- alias: Home - Leaving
   description: This automation runs the vacuum cleaners, sets the thermostat to heat/cool,
     and turns off all lights when the home zone is empty for more than 5 minutes.
   triggers:
@@ -19,8 +18,7 @@
       entity_id: input_select.home_mode
   mode: single
 
-- id: '1717873880277'
-  alias: Notify - Washing Done
+- alias: Notify - Washing Done
   description: Using the derived Threshold Sensor, determine when the Washing Machine
     is done, and notify my phone
   triggers:
@@ -42,8 +40,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1718212148891'
-  alias: Notify - Side Door Open
+- alias: Notify - Side Door Open
   description: When the Side Door is opened, send a Notification to my phone
   triggers:
   - entity_id:
@@ -58,8 +55,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1718327651681'
-  alias: Notify - Low Battery
+- alias: Notify - Low Battery
   description: Notify if any battery is below 20%, excluding certain sensors.
   triggers:
   - hours: /8
@@ -94,8 +90,7 @@
         action: notify.phone_list
   mode: single
 
-- id: '1719722965777'
-  alias: Lights - Closet
+- alias: Lights - Closet
   description: Turn on closet light when door opens, turn off when door closes
   triggers:
   - entity_id: binary_sensor.closet_contact_sensor
@@ -132,8 +127,7 @@
         data: {}
   mode: single
 
-- id: '1719723426335'
-  alias: Lights - Basement
+- alias: Lights - Basement
   description: Turn on basement lights when door opens, turn off when door closes
   triggers:
   - entity_id: binary_sensor.basement_door_contact_sensor
@@ -168,8 +162,7 @@
           data: {}
   mode: single
 
-- id: '1719723688562'
-  alias: Lights - Laundry
+- alias: Lights - Laundry
   description: Turn on laundry lights when door opens, turn off when door closes
   triggers:
   - entity_id: binary_sensor.laundry_door_contact_sensor
@@ -202,8 +195,7 @@
         action: light.turn_off
   mode: single
 
-- id: '1720477153974'
-  alias: Lights - Kitchen
+- alias: Lights - Kitchen
   triggers:
   - trigger: state
     entity_id: sensor.kitchen_mode
@@ -243,8 +235,7 @@
         action: light.turn_off
   mode: single
 
-- id: '1720477864972'
-  alias: Lights - Library
+- alias: Lights - Library
   triggers:
   - entity_id: sensor.library_mode
     trigger: state
@@ -272,8 +263,7 @@
         entity_id: light.zigbee_group_library
       action: light.turn_off
 
-- id: '1720746042717'
-  alias: Lights - Meditation
+- alias: Lights - Meditation
   triggers:
   - entity_id: sensor.meditation_mode
     trigger: state
@@ -303,8 +293,7 @@
       action: light.turn_off
       data: {}
 
-- id: '1720907392257'
-  alias: Lights - Garage
+- alias: Lights - Garage
   description: Manage Garage lights based on Occupancy & time of day
   triggers:
   - entity_id: sensor.garage_mode
@@ -336,8 +325,7 @@
       action: light.turn_off
       data: {}
 
-- id: '1721955381870'
-  alias: Lights - Drone Room
+- alias: Lights - Drone Room
   description: Turn on Drone Room lights on motion, turn off when clear
   triggers:
   - entity_id: binary_sensor.drone_room_motion_sensor_motion
@@ -371,8 +359,7 @@
         entity_id: light.zigbee_group_drone_room
       action: light.turn_off
 
-- id: '1723048236278'
-  alias: Lights - Front Porch
+- alias: Lights - Front Porch
   description: Turn Front Porch lights on or off based on front_porch_mode sensor
   triggers:
   - entity_id: sensor.front_porch_mode
@@ -394,8 +381,7 @@
       action: light.turn_off
   mode: single
 
-- id: '1723846212553'
-  alias: Notify - Driveway
+- alias: Notify - Driveway
   description: Send an actionable notification when an animal, person, or vehicle
     is spotted in the driveway
   triggers:
@@ -468,8 +454,7 @@
         action: notify.phone_list
   mode: single
 
-- id: '1724008608277'
-  alias: Notify - Front Door
+- alias: Notify - Front Door
   description: Send notifications for package, person, or doorbell press.
   triggers:
   - id: package
@@ -547,8 +532,7 @@
           preannounce: false
   mode: single
 
-- id: '1725562375436'
-  alias: Lights - Driveway
+- alias: Lights - Driveway
   description: Turn on driveway floods at night if garage door is open or motion detected
   triggers:
   - entity_id: cover.main_garage_door
@@ -586,8 +570,7 @@
     data: {}
   mode: restart
 
-- id: '1725815855595'
-  alias: Lights - Patio
+- alias: Lights - Patio
   description: Control garage wall lights based on solar radiation and back door lock
     status
   triggers:
@@ -623,8 +606,7 @@
       data: {}
   mode: single
 
-- id: '1725851554861'
-  alias: Home - Arriving
+- alias: Home - Arriving
   description: Manage vacuums, HVAC, and Lights for when I return home
   triggers:
   - entity_id: zone.home
@@ -658,8 +640,7 @@
       entity_id: input_select.home_mode
   mode: single
 
-- id: '1726091375798'
-  alias: Vacuum - Main Floor
+- alias: Vacuum - Main Floor
   description: Automatically start the Dreame main floor vacuum at noon on weekdays
   triggers:
   - at: '14:00:00'
@@ -681,8 +662,7 @@
       target_vacuum: vacuum.d10_plus_gen_2_main_floor
   mode: single
 
-- id: '1726100649026'
-  alias: Input Select - Bedtime
+- alias: Input Select - Bedtime
   description: Activates Bedtime script and sets binary flag when Bedtime event is
     triggered
   triggers:
@@ -700,8 +680,7 @@
     data: {}
   mode: single
 
-- id: '1726100671948'
-  alias: Input Select - Awake
+- alias: Input Select - Awake
   description: Turns off the binary flag when Awake event is triggered
   triggers:
   - trigger: tag
@@ -721,8 +700,7 @@
     data: {}
   mode: single
 
-- id: '1726252006400'
-  alias: Vacuum - Upstairs
+- alias: Vacuum - Upstairs
   description: Automatically start the Dreame upstairs vacuum at 1pm on weekends
   triggers:
   - at: '13:00:00'
@@ -741,8 +719,7 @@
       target_vacuum: vacuum.d10_plus_gen_2_upstairs
   mode: single
 
-- id: '1726716727349'
-  alias: Meditation - Start
+- alias: Meditation - Start
   description: When I begin meditation, scanning the NFC tag will turn off the lights
     in the Meditation Room
   triggers:
@@ -761,8 +738,7 @@
       entity_id: light.zigbee_group_meditation
   mode: single
 
-- id: '1726716865596'
-  alias: Meditation - Finish
+- alias: Meditation - Finish
   description: When tag is scanned at the end of Meditation, turn off the input boolean
     and turn the lights on in the Meditation Room
   triggers:
@@ -785,8 +761,7 @@
       - light.zigbee_group_meditation
   mode: single
 
-- id: '1726762029569'
-  alias: Notify - Garage Door
+- alias: Notify - Garage Door
   description: Send a notification if the Garage Door has been open for 15 minutes
     or more
   triggers:
@@ -818,8 +793,7 @@
     action: cover.close_cover
   mode: single
 
-- id: '1726771306419'
-  alias: Notify - Garage Open and Person Detected
+- alias: Notify - Garage Open and Person Detected
   description: Sends a notification when the garage door is open and a person is detected
     in the driveway.
   triggers:
@@ -839,8 +813,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1727133389819'
-  alias: Notify - Door Open while Away
+- alias: Notify - Door Open while Away
   description: Notify my phone if any outside doors open while I'm away
   triggers:
   - entity_id:
@@ -863,8 +836,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1728837482940'
-  alias: Input Select - Reading
+- alias: Input Select - Reading
   description: Activates Reading script on NFC tag scan
   triggers:
   - tag_id: [tag_id]
@@ -883,8 +855,7 @@
       entity_id: input_select.home_mode
   mode: restart
 
-- id: '1729543822872'
-  alias: Notify - Garage Break-In
+- alias: Notify - Garage Break-In
   description: Send notification if either of the side doors to the garages are opened
   triggers:
   - entity_id: binary_sensor.side_garage_side_door_contact_sensor
@@ -916,8 +887,7 @@
           title: Garage Break-In
         action: notify.phone_list
 
-- id: '1730414063631'
-  alias: Lights - Hall Closet
+- alias: Lights - Hall Closet
   description: Turn on hallway light when door opens, turn off when door closes
   triggers:
   - entity_id: binary_sensor.hallway_closet_contact_sensor
@@ -946,8 +916,7 @@
         action: light.turn_off
   mode: single
 
-- id: '1732421451632'
-  alias: Lights - Movie
+- alias: Lights - Movie
   description: Trigger movie script
   triggers:
   - entity_id: input_boolean.movie_time
@@ -961,8 +930,7 @@
       entity_id: script.movies
   mode: single
 
-- id: '1732684048507'
-  alias: Lights - Living Room
+- alias: Lights - Living Room
   triggers:
   - trigger: state
     entity_id: sensor.living_room_mode
@@ -1005,8 +973,7 @@
         action: light.turn_off
   mode: single
 
-- id: '1732772312591'
-  alias: Lights - Bathroom
+- alias: Lights - Bathroom
   triggers:
   - entity_id: sensor.bathroom_mode
     trigger: state
@@ -1034,8 +1001,7 @@
         entity_id: light.zigbee_group_bathroom
       action: light.turn_off
 
-- id: '1732772412133'
-  alias: Lights - Bedroom
+- alias: Lights - Bedroom
   triggers:
   - entity_id: sensor.bedroom_mode
     trigger: state
@@ -1063,8 +1029,7 @@
         entity_id: light.zigbee_group_bedroom
       action: light.turn_off
 
-- id: '1732772626979'
-  alias: Lights - Master Bath
+- alias: Lights - Master Bath
   triggers:
   - entity_id: sensor.master_bath_mode
     trigger: state
@@ -1096,8 +1061,7 @@
       action: light.turn_off
   mode: single
 
-- id: '1732915071782'
-  alias: Dryer Running - Start
+- alias: Dryer Running - Start
   description: Trigger Dryer Running
   triggers:
   - entity_id: binary_sensor.dryer_vibration_sensor_vibration
@@ -1113,8 +1077,7 @@
       entity_id: input_boolean.dryer_running
     action: input_boolean.turn_on
 
-- id: '1732915104137'
-  alias: Dryer Running - Stop
+- alias: Dryer Running - Stop
   description: ''
   triggers:
   - entity_id: binary_sensor.dryer_vibration_sensor_vibration
@@ -1129,8 +1092,7 @@
     action: input_boolean.turn_off
     data: {}
 
-- id: '1732915223510'
-  alias: Notify - Dryer
+- alias: Notify - Dryer
   description: ''
   triggers:
   - entity_id: input_boolean.dryer_running
@@ -1143,8 +1105,7 @@
       title: Current dryer load is done
     action: notify.phone_list
 
-- id: '1733238594053'
-  alias: Notify - Leak Detected
+- alias: Notify - Leak Detected
   description: Notify when a leak is detected
   triggers:
   - entity_id:
@@ -1182,8 +1143,7 @@
     action: input_boolean.turn_off
   mode: single
 
-- id: '1733775855694'
-  alias: Event - Dog Out Potty
+- alias: Event - Dog Out Potty
   description: Update an Input Datetime to indicate when Dog last went potty
   triggers:
   - tag_id: [tag_id]
@@ -1200,8 +1160,7 @@
     action: input_datetime.set_datetime
   mode: single
 
-- id: '1734547817102'
-  alias: Notify - Snow Forecasted
+- alias: Notify - Snow Forecasted
   description: Turns on the lawn charger if snow is forecasted at 5 AM and sends a
     notification.
   triggers:
@@ -1220,8 +1179,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1734569760321'
-  alias: Notify - Charger Turned Off
+- alias: Notify - Charger Turned Off
   description: Turn off the lawn charger switch and notify when the current stays
     at 0 for 1 minute.
   triggers:
@@ -1246,8 +1204,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1734928483291'
-  alias: Sentence - Movie Time (On)
+- alias: Sentence - Movie Time (On)
   description: Allow Voice Assist to run Movie Time Automation
   triggers:
   - trigger: conversation
@@ -1264,8 +1221,7 @@
       entity_id: input_boolean.movie_time
   mode: single
 
-- id: '1734928588206'
-  alias: Sentence - Movie Time (Off)
+- alias: Sentence - Movie Time (Off)
   description: Voice Assist to turn off Movie Time
   triggers:
   - trigger: conversation
@@ -1286,8 +1242,7 @@
       entity_id: script.living_room_white_relax
   mode: single
 
-- id: '1734928838063'
-  alias: Sentence - Outside Temperature
+- alias: Sentence - Outside Temperature
   description: Tell me the temperature outside
   triggers:
   - trigger: conversation
@@ -1297,13 +1252,10 @@
     - How hot is it outside
   conditions: []
   actions:
-  - set_conversation_response: Current temperature outside is {{ states('sensor.ws2902_weather_temperature')
-      | round(0) }}°F, and the Feels Like temperature is {{ states('sensor.pirateweather_apparent_temperature')
-      | round(0) }}°F.
+  - set_conversation_response: Current temperature outside is {{ states('sensor.ws2902_weather_temperature') | round(0) }}°F, and the Feels Like temperature is {{ states('sensor.pirateweather_apparent_temperature') | round(0) }}°F.
   mode: single
 
-- id: '1734929056367'
-  alias: Sentence - Living Room Lights (On - Day)
+- alias: Sentence - Living Room Lights (On - Day)
   description: ''
   triggers:
   - trigger: conversation
@@ -1322,8 +1274,7 @@
     action: script.energize
   mode: single
 
-- id: '1734930057321'
-  alias: Sentence - Dryer
+- alias: Sentence - Dryer
   description: ''
   triggers:
   - trigger: conversation
@@ -1335,8 +1286,7 @@
       right now.\n{% endif %}"
   mode: single
 
-- id: '1734930209204'
-  alias: Sentence - Washer
+- alias: Sentence - Washer
   description: ''
   triggers:
   - trigger: conversation
@@ -1353,8 +1303,7 @@
       Machine is off\n{% endif %}"
   mode: single
 
-- id: '1734930618770'
-  alias: Sentence - Christmas Tree (On)
+- alias: Sentence - Christmas Tree (On)
   description: ''
   triggers:
   - trigger: conversation
@@ -1370,8 +1319,7 @@
       entity_id: switch.christmas_tree_all
   mode: single
 
-- id: '1734930661918'
-  alias: Sentence - Christmas Tree (Off)
+- alias: Sentence - Christmas Tree (Off)
   description: ''
   triggers:
   - trigger: conversation
@@ -1387,8 +1335,7 @@
       entity_id: switch.christmas_tree_all
   mode: single
 
-- id: '1734931765787'
-  alias: Sentence - Upstairs Script
+- alias: Sentence - Upstairs Script
   description: ''
   triggers:
   - trigger: conversation
@@ -1403,8 +1350,7 @@
     data: {}
   mode: single
 
-- id: '1734932151637'
-  alias: Sentence - Back Door (Unlock)
+- alias: Sentence - Back Door (Unlock)
   description: ''
   triggers:
   - trigger: conversation
@@ -1418,8 +1364,7 @@
       entity_id: lock.back_door_lock
   mode: single
 
-- id: '1734932193048'
-  alias: Sentence - Back Door (Lock)
+- alias: Sentence - Back Door (Lock)
   description: ''
   triggers:
   - trigger: conversation
@@ -1433,8 +1378,7 @@
       entity_id: lock.back_door_lock
   mode: single
 
-- id: '1734932311140'
-  alias: Sentence - Back Door (Lock Status)
+- alias: Sentence - Back Door (Lock Status)
   description: ''
   triggers:
   - trigger: conversation
@@ -1442,12 +1386,10 @@
   conditions: []
   actions:
   - set_conversation_response: "{% if is_state('lock.back_door_lock', 'locked') %}\n
-      \ The Back Door is locked.\n{% else %}\n  The Back Door is unlocked.\n{% endif
-      %}"
+      \ The Back Door is locked.\n{% else %}\n  The Back Door is unlocked.\n{% endif %}"
   mode: single
 
-- id: '1734932402503'
-  alias: Sentence - Front Door (Lock Status)
+- alias: Sentence - Front Door (Lock Status)
   description: ''
   triggers:
   - trigger: conversation
@@ -1455,12 +1397,10 @@
   conditions: []
   actions:
   - set_conversation_response: "{% if is_state('lock.front_door_lock', 'locked') %}\n
-      \ The Front Door is locked.\n{% else %}\n  The Front Door is unlocked.\n{% endif
-      %}"
+      \ The Front Door is locked.\n{% else %}\n  The Front Door is unlocked.\n{% endif %}"
   mode: single
 
-- id: '1734932428404'
-  alias: Sentence - Front Door (Lock)
+- alias: Sentence - Front Door (Lock)
   description: ''
   triggers:
   - trigger: conversation
@@ -1474,8 +1414,7 @@
       entity_id: lock.front_door_lock
   mode: single
 
-- id: '1734932458969'
-  alias: Sentence - Front Door (Unlock)
+- alias: Sentence - Front Door (Unlock)
   description: ''
   triggers:
   - trigger: conversation
@@ -1489,8 +1428,7 @@
       entity_id: lock.front_door_lock
   mode: single
 
-- id: '1734932969129'
-  alias: Sentence - Fireplace (Off)
+- alias: Sentence - Fireplace (Off)
   description: ''
   triggers:
   - trigger: conversation
@@ -1506,8 +1444,7 @@
       entity_id: switch.fireplace
   mode: single
 
-- id: '1734932999448'
-  alias: Sentence - Fireplace (On)
+- alias: Sentence - Fireplace (On)
   description: ''
   triggers:
   - trigger: conversation
@@ -1523,8 +1460,7 @@
       entity_id: switch.fireplace
   mode: single
 
-- id: '1734933168012'
-  alias: Sentence - Drone Charger (On)
+- alias: Sentence - Drone Charger (On)
   description: ''
   triggers:
   - trigger: conversation
@@ -1540,8 +1476,7 @@
       entity_id: switch.drone_charger
   mode: single
 
-- id: '1734933727134'
-  alias: Sentence - Living Room Lights (On - Night)
+- alias: Sentence - Living Room Lights (On - Night)
   description: ''
   triggers:
   - trigger: conversation
@@ -1559,8 +1494,7 @@
     action: script.white_relax
   mode: single
 
-- id: '1734933996080'
-  alias: Sentence - Outside Humidity
+- alias: Sentence - Outside Humidity
   description: ''
   triggers:
   - trigger: conversation
@@ -1575,8 +1509,7 @@
   - set_conversation_response: Current humidity outside is {{ states('sensor.ws2902_weather_humidity') | round(0) }} percent
   mode: single
 
-- id: '1734934140924'
-  alias: Sentence - Inside Humidity
+- alias: Sentence - Inside Humidity
   description: ''
   triggers:
   - trigger: conversation
@@ -1590,8 +1523,7 @@
   - set_conversation_response: Current humidity inside is {{ states('sensor.main_floor_humidity') | round(0) }} percent
   mode: single
 
-- id: '1734984535010'
-  alias: Sentence - Weather Report
+- alias: Sentence - Weather Report
   description: ''
   triggers:
   - trigger: conversation
@@ -1619,8 +1551,7 @@
       mph,\nand {{ rain_status }} and {{ snow_status }} and {{ ice_status }}."
   mode: single
 
-- id: '1734986236919'
-  alias: Sentence - Air Quality
+- alias: Sentence - Air Quality
   description: ''
   triggers:
   - trigger: conversation
@@ -1633,8 +1564,7 @@
   - set_conversation_response: "The current AQI score is {{ states('sensor.outdoor_aqi') }} "
   mode: single
 
-- id: '1734986563699'
-  alias: Sentence - Face Mask
+- alias: Sentence - Face Mask
   description: ''
   triggers:
   - trigger: conversation
@@ -1654,8 +1584,7 @@
       \ It appears a mask is not necessary today\n{% endif %}"
   mode: single
 
-- id: '1734986821603'
-  alias: Sentence - Back Door (Open)
+- alias: Sentence - Back Door (Open)
   description: ''
   triggers:
   - trigger: conversation
@@ -1667,8 +1596,7 @@
       endif %}"
   mode: single
 
-- id: '1734986882058'
-  alias: Sentence - Front Door (Open)
+- alias: Sentence - Front Door (Open)
   description: ''
   triggers:
   - trigger: conversation
@@ -1680,8 +1608,7 @@
       endif %}"
   mode: single
 
-- id: '1734986970722'
-  alias: Sentence - Side Door (Open)
+- alias: Sentence - Side Door (Open)
   description: ''
   triggers:
   - trigger: conversation
@@ -1695,8 +1622,7 @@
       endif %}"
   mode: single
 
-- id: '1734987094798'
-  alias: Sentence - Washer (Turn On)
+- alias: Sentence - Washer (Turn On)
   description: ''
   triggers:
   - trigger: conversation
@@ -1712,8 +1638,7 @@
       entity_id: switch.washing_machine_switch
   mode: single
 
-- id: '1734987719111'
-  alias: Sentence - Vacuum (Main Floor)
+- alias: Sentence - Vacuum (Main Floor)
   description: ''
   triggers:
   - trigger: conversation
@@ -1727,8 +1652,7 @@
     data: {}
   mode: single
 
-- id: '1734988159950'
-  alias: Sentence - Lawn Charger
+- alias: Sentence - Lawn Charger
   description: ''
   triggers:
   - trigger: conversation
@@ -1745,8 +1669,7 @@
       entity_id: switch.lawn_charger
   mode: single
 
-- id: '1734989361217'
-  alias: Sentence - Windy
+- alias: Sentence - Windy
   description: ''
   triggers:
   - trigger: conversation
@@ -1773,8 +1696,7 @@
       is calm outside\n{% endif %}"
   mode: single
 
-- id: '1734990375913'
-  alias: Notify - Garage Door Opened
+- alias: Notify - Garage Door Opened
   description: Notify me when the Garage Door Opens, if I am home
   triggers:
   - trigger: state
@@ -1800,8 +1722,7 @@
       entity_id: assist_satellite.ha_voice_assist_satellite_living_room
   mode: single
 
-- id: '1735063882482'
-  alias: Sentence - Living Room Lights (Lower)
+- alias: Sentence - Living Room Lights (Lower)
   description: ''
   triggers:
   - trigger: conversation
@@ -1816,8 +1737,7 @@
     action: script.white_relax
   mode: single
 
-- id: '1735419637439'
-  alias: Lights - Nightlight
+- alias: Lights - Nightlight
   description: Turn on nightlight to red at 5% when motion is detected during bedtime.
   triggers:
   - entity_id: binary_sensor.master_bath_motion_bedtime
@@ -1847,8 +1767,7 @@
     data: {}
   mode: restart
 
-- id: '1735502085603'
-  alias: Notify - Weather Alert
+- alias: Notify - Weather Alert
   description: Sends a notification when a weather alert occurs
   triggers:
   - entity_id: sensor.[county]
@@ -1860,7 +1779,7 @@
     data:
       message: "{% set alerts = state_attr('sensor.[county]', 'alerts') %} {% if alerts
         == [] or alerts is none %}\n  No alerts\n{% else %}\n  {{ alerts[0]['severity']
-        + ' ' + alerts[0]['title'] }}\n{% endif %}\n"
+        + ' ' + alerts[0]['title'] }}\n{% endif %}"
       data:
         actions:
         - action: URI
@@ -1871,8 +1790,7 @@
           uri: https://forecast.weather.gov/MapClick.php?lat=[latitude]&lon=[longitude]
   mode: single
 
-- id: '1738961973962'
-  alias: Lock - Unlock Back Door
+- alias: Lock - Unlock Back Door
   description: ''
   triggers:
   - entity_id: cover.main_garage_door
@@ -1888,8 +1806,7 @@
     action: lock.unlock
   mode: single
 
-- id: '1739324635864'
-  alias: Vacuum - Basement
+- alias: Vacuum - Basement
   description: Automatically start the Dreame basement vacuum at noon
   triggers:
   - at: '12:00:00'
@@ -1913,8 +1830,7 @@
       target_vacuum: vacuum.d10_plus_gen_2_basement
   mode: single
 
-- id: '1739324699091'
-  alias: Sentence - Vacuum (Basement)
+- alias: Sentence - Vacuum (Basement)
   description: ''
   triggers:
   - trigger: conversation
@@ -1928,8 +1844,7 @@
     data: {}
   mode: single
 
-- id: '1741707176423'
-  alias: Event - Feed Cat
+- alias: Event - Feed Cat
   triggers:
   - at: '07:00:00'
     trigger: time
@@ -1962,8 +1877,7 @@
           message: ❌ Feeder was unavailable at feeding time!
   mode: single
 
-- id: '1741925759464'
-  alias: Garage - Close Main
+- alias: Garage - Close Main
   description: ''
   triggers:
   - entity_id: cover.main_garage_door
@@ -1980,8 +1894,7 @@
     action: cover.close_cover
   mode: single
 
-- id: '1741925794700'
-  alias: Garage - Close Side
+- alias: Garage - Close Side
   description: ''
   triggers:
   - entity_id: cover.side_garage_door
@@ -1998,8 +1911,7 @@
     action: cover.close_cover
   mode: single
 
-- id: '1742239055767'
-  alias: Event - Fireplace Control
+- alias: Event - Fireplace Control
   description: ''
   triggers:
   - entity_id: binary_sensor.fireplace_mode
@@ -2020,8 +1932,7 @@
         entity_id: switch.fireplace
   mode: restart
 
-- id: '1744048284189'
-  alias: Notify - Fire Alarm Triggered
+- alias: Notify - Fire Alarm Triggered
   description: Notify when the Zigbee Firefighter detects a fire alarm
   triggers:
   - entity_id: binary_sensor.ecolink_firefighter
@@ -2053,8 +1964,7 @@
       - top_floor
   mode: single
 
-- id: '1746744910900'
-  alias: Washing Machine - Turn On
+- alias: Washing Machine - Turn On
   description: ''
   triggers:
   - entity_id: binary_sensor.basement_door_contact_sensor
@@ -2078,8 +1988,7 @@
     action: switch.turn_on
   mode: single
 
-- id: '1748039392247'
-  alias: Event - Dog Fed
+- alias: Event - Dog Fed
   description: ''
   triggers:
   - trigger: state
@@ -2096,8 +2005,7 @@
     action: input_datetime.set_datetime
   mode: single
 
-- id: '1748042064320'
-  alias: Event - Cleaned Litterbox
+- alias: Event - Cleaned Litterbox
   description: When KLB NFC Tag is scanned, update the value for it and run the basement
     vacuum
   triggers:
@@ -2116,8 +2024,7 @@
       target_vacuum: vacuum.d10_plus_gen_2_basement
   mode: single
 
-- id: '1748447941318'
-  alias: Event - Watered Garden Bed
+- alias: Event - Watered Garden Bed
   description: ''
   triggers:
   - trigger: tag
@@ -2132,8 +2039,7 @@
       entity_id: input_datetime.garden_last_watered_time
   mode: single
 
-- id: '1758243037694'
-  alias: Notify - Automation Ran
+- alias: Notify - Automation Ran
   description: Sends a notification whenever any automation is triggered
   triggers:
   - event_type: automation_triggered
@@ -2148,8 +2054,7 @@
     action: notify.phone_list
   mode: queued
 
-- id: '1758402771586'
-  alias: Notify - Side Door
+- alias: Notify - Side Door
   description: Send an actionable notification when an package or person is at Side
     Door, or doorbell press
   triggers:
@@ -2206,8 +2111,7 @@
           entity_id: assist_satellite.ha_voice_assist_satellite_living_room
   mode: single
 
-- id: '1758836860598'
-  alias: Vacuum - Bedroom (Tag)
+- alias: Vacuum - Bedroom (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2220,8 +2124,7 @@
       segment: 2
   mode: single
 
-- id: '1758836945327'
-  alias: Vacuum - Master Bath (Tag)
+- alias: Vacuum - Master Bath (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2234,8 +2137,7 @@
       segment: 1
   mode: single
 
-- id: '1758837012035'
-  alias: Vacuum - Office (Tag)
+- alias: Vacuum - Office (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2248,8 +2150,7 @@
       segment: 4
   mode: single
 
-- id: '1758837056882'
-  alias: Vacuum - Meditation (Tag)
+- alias: Vacuum - Meditation (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2262,8 +2163,7 @@
       segment: 3
   mode: single
 
-- id: '1758837123942'
-  alias: Vacuum - Bathroom (Tag)
+- alias: Vacuum - Bathroom (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2276,8 +2176,7 @@
       segment: 1
   mode: single
 
-- id: '1758837162559'
-  alias: Vacuum - Basement (Tag)
+- alias: Vacuum - Basement (Tag)
   description: ''
   triggers:
   - trigger: tag
@@ -2288,8 +2187,8 @@
     data:
       target_vacuum: vacuum.d10_plus_gen_2_basement
   mode: single
-- id: '1759331431146'
-  alias: Notify - Devices Offline
+
+- alias: Notify - Devices Offline
   description: Notify immediately when devices become unavailable (2-hour cooldown)
   triggers:
   - value_template: "{{ states('sensor.unavailable_devices') | trim | length > 0 }} "
@@ -2304,8 +2203,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1759951141707'
-  alias: Sentence - Clothing Suggestion
+- alias: Sentence - Clothing Suggestion
   description: ''
   triggers:
   - trigger: conversation
@@ -2319,8 +2217,7 @@
     data: {}
   mode: single
 
-- id: '1760298637097'
-  alias: Vacuum - Main Bath (After Shower)
+- alias: Vacuum - Main Bath (After Shower)
   description: Run the vacuum in the main bath 5 minutes after the shower stops
   triggers:
   - entity_id: binary_sensor.shower_in_use
@@ -2342,8 +2239,7 @@
       segment: 1
   mode: single
 
-- id: '1761010151428'
-  alias: Security - Door Opened During Bedtime
+- alias: Security - Door Opened During Bedtime
   description: Warns if any exterior door opens while bedtime mode is active.
   triggers:
   - entity_id:
@@ -2403,8 +2299,7 @@
     action: notify.phone_list
   mode: parallel
 
-- id: '1761435623418'
-  alias: Sentence - Lock Back Doors
+- alias: Sentence - Lock Back Doors
   description: ''
   triggers:
   - trigger: conversation
@@ -2422,8 +2317,7 @@
       - lock.garage_handle_lock
   mode: single
 
-- id: '1761691467401'
-  alias: Input Select - Time Mode
+- alias: Input Select - Time Mode
   description: Switch between Early and Late based on the time of day
   triggers:
   - at: '09:00:00'
@@ -2457,8 +2351,7 @@
         action: input_select.select_option
   mode: single
 
-- id: '1761780486232'
-  alias: HVAC - HRV Smart Control
+- alias: HVAC - HRV Smart Control
   description: Turn HRV on/off based on CO2, humidity, occupancy, AQI, and outdoor
     temp (with cooldown)
   triggers:
@@ -2492,8 +2385,7 @@
         action: switch.turn_off
   mode: restart
 
-- id: '1762999711336'
-  alias: Notify - Clean Catbox
+- alias: Notify - Clean Catbox
   description: Sends a reminder if it's been 48+ hours since the litterbox was last
     cleaned.
   triggers:
@@ -2504,7 +2396,7 @@
     value_template: "{% set last_cleaned = states('input_datetime.cleaned_litterbox_time')
       %} {% if last_cleaned not in ['unknown', 'unavailable', 'none', ''] %}\n  {{
       (as_timestamp(now()) - as_timestamp(last_cleaned)) >= 48 * 3600 }}\n{% else
-      %}\n  false\n{% endif %}\n"
+      %}\n  false\n{% endif %}"
   actions:
   - data:
       title: "\U0001F408 Litterbox Reminder"
@@ -2512,8 +2404,7 @@
     action: notify.phone_list
   mode: single
 
-- id: '1765762529269'
-  alias: HVAC - Temp Control
+- alias: HVAC - Temp Control
   description: Sync Ecobee HVAC mode, temperature, and fan mode from helper sensors
   triggers:
   - entity_id:
@@ -2525,7 +2416,7 @@
   - condition: template
     value_template: "{{ states('sensor.hvac_mode') not in ['unknown', 'unavailable']
       and\n   states('sensor.desired_indoor_temp') not in ['unknown', 'unavailable']
-      and\n   states('sensor.fan_mode') not in ['unknown', 'unavailable'] }}\n"
+      and\n   states('sensor.fan_mode') not in ['unknown', 'unavailable'] }}"
   actions:
   - target:
       entity_id: climate.ecobee_thermostat
@@ -2544,8 +2435,7 @@
     action: climate.set_fan_mode
   mode: restart
 
-- id: '1767982703032'
-  alias: Lock - Mirror Garage Handle to Back Door
+- alias: Lock - Mirror Garage Handle to Back Door
   description: ''
   triggers:
   - entity_id: lock.back_door_lock
@@ -2570,8 +2460,7 @@
         action: lock.lock
   mode: single
 
-- id: '1768698715968'
-  alias: Washing Machine - Turn Off
+- alias: Washing Machine - Turn Off
   description: Turn off the washing machine switch if it has not been running for
     30 minutes
   triggers:
