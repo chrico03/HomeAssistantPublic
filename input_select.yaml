@@ -1,0 +1,16 @@
+time_mode:
+  name: Time Mode
+  icon: mdi:clock-outline
+  options:
+    - early
+    - late
+  
+home_mode:
+  name: Home Mode
+  icon: mdi:home-analytics
+  options:
+    - awake
+    - bedtime
+    - not_home
+    - reading
+  initial: awake
