@@ -1,0 +1,15 @@
+  is_meditating:
+    name: Is Meditating
+    icon: mdi:meditation
+    
+  dryer_running:
+    name: Dryer Running
+    icon: mdi:tumble-dryer
+
+  movie_time:
+    name: Movie Time
+    icon: mdi:movie-open
+
+  leak_detected:
+    name: Leak Detected
+    icon: mdi:pipe-leak
