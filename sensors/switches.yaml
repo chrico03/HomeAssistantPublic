@@ -1,0 +1,5 @@
+- platform: group
+  name: Christmas Tree All
+  entities:
+    - switch.living_room_1
+    - switch.living_room_2
