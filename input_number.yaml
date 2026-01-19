@@ -1,0 +1,24 @@
+cat_age:
+  name: Cat Age
+  min: 0
+  max: 30
+  step: 0.1
+  unit_of_measurement: 'yr'
+cat_weight:
+  name: Cat Weight
+  min: 0
+  max: 100
+  step: 0.1
+  unit_of_measurement: 'lb'
+dog_age:
+  name: Dog Age
+  min: 0
+  max: 30
+  step: 0.1
+  unit_of_measurement: 'yr'
+dog_weight:
+  name: Dog Weight
+  min: 0
+  max: 200
+  step: 0.1
+  unit_of_measurement: 'lb'
