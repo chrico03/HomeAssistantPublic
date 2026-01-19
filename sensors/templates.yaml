@@ -1,0 +1,756 @@
+- sensor:
+     - name: "Total Lights Count"
+       unique_id: "total_lights_count"
+       state: "{{ states.light 
+                | selectattr('state', 'eq', 'on') 
+                | rejectattr('entity_id', 'in', ['light.side_garage_light','light.main_garage_light','light.reolink_home_hub_status_led']) 
+                | rejectattr('entity_id', 'in', states.light | map(attribute='entity_id') | select('search', '^light\\.zigbee_group') | list)
+                | list
+                | count}}"
+
+     - name: "Total Doors Open Count"
+       unique_id: "total_doors_open_count"
+       state: "{{ states.binary_sensor | select('search', 'contact') | map(attribute='entity_id') | select('is_state', 'on') | list |length }}"
+       
+     - name: "Outer Doors Open"
+       unique_id: "outer_doors_open"
+       state: "{{ states | selectattr('entity_id','in',state_attr('group.outer_doors','entity_id')) | selectattr('state','eq','on') | list | length }}"
+     
+     - name: "Basement Doors Open"
+       unique_id: "basement_doors_open"
+       state: "{{ states.binary_sensor | select('search', 'basement_door_contact_sensor|laundry_door_contact_sensor') | map(attribute='entity_id') | select('is_state', 'on') | list |length }}"
+
+     - name: "Master Bath Illuminance"
+       unique_id: "master_bath_illuminance"
+       state: >
+         {{ ((states('sensor.master_bath_bed_motion_sensor_illuminance') | float(0)) + (states('sensor.master_bath_hall_motion_sensor_illuminance') | float(0))) / 2 }}
+       state_class: "measurement"
+       unit_of_measurement: "lx"
+
+     - name: "Master Bath Temp"
+       unique_id: "master_bath_temp_12345"
+       state: >
+         {% set master_bath_temp = ((states('sensor.master_bath_bed_motion_sensor_temperature') | float(0)) + (states('sensor.master_bath_hall_motion_sensor_temperature') | float(0)) + (states('sensor.master_bath_temp_humidity_sensor_temperature') | float(0))) / 3 %}
+         {{ master_bath_temp | float | round(1) }}
+       state_class: "measurement"
+       unit_of_measurement: "°F"
+
+     - name: "Master Bath Motion Sensor Motion"
+       unique_id: "master_bath_motion_sensor_motion"
+       state: >
+         {{ is_state('binary_sensor.master_bath_bed_motion_sensor_motion', 'on') or is_state('binary_sensor.master_bath_hall_motion_sensor_motion', 'on') }}
+
+     - name: "Main Floor Humidity"
+       unique_id: "main_floor_humidity"
+       state: >
+         {% set humidity = ((states('sensor.kitchen_ep1_humidity') | float | round(0)) + (states('sensor.living_room_ep1_humidity') | float | round(0)) + (states('sensor.ws2902_weather_humidity_indoor') | float | round(0)) + (states('sensor.ecobee_thermostat_current_humidity') | float | round(0))) / 4 %}
+         {{ humidity | float | round(1) }}
+       unit_of_measurement: "%"
+     
+     - name: "Total Leaks Detected"
+       unique_id: "total_leaks_detected"
+       state: >
+         {{ states.binary_sensor | select('search', '_leak_detected') | map(attribute='entity_id') | select('is_state', 'on') | list |length }}
+       device_class: moisture
+     
+     - name: "Upstairs Temp"
+       unique_id: "upstairs_temp"
+       state: >
+         {% set temp = ((states('sensor.s1_pro_bedroom_temperature') | float | round(0)) 
+         + (states('sensor.library_ep1_temperature') | float | round(0)) 
+         + (states('sensor.meditation_ep1_temperature') | float | round(0)) 
+         + (states('sensor.master_bath_temp') | float | round(0))) 
+         / 4 %}
+         {{ temp | float | round(1) }}
+       unit_of_measurement: "°F"
+         
+     - name: "Main Floor Cleaning Progress"
+       unit_of_measurement: "%"
+       state: >
+          {% set current = states('sensor.d10_plus_gen_2_main_floor_cleaning_time') | float(0) %}
+          {% set total_time = states('sensor.d10_plus_gen_2_main_floor_total_cleaning_time') | float(0) %}
+          {% set count = states('sensor.d10_plus_gen_2_main_floor_cleaning_count') | float(0) %}
+          {% set avg_time = count > 0 and (total_time / count) or 0 %}
+          {% if avg_time > 0 %}
+            {{ [((current / avg_time) * 100) | round(1), 100] | min }}
+          {% else %}
+            0
+          {% endif %}
+       availability: >
+          {{ states('sensor.d10_plus_gen_2_main_floor_cleaning_time') not in ['unknown','unavailable'] }}
+          
+     - name: "Upstairs Cleaning Progress"
+       unit_of_measurement: "%"
+       state: >
+          {% set current = states('sensor.d10_plus_gen_2_upstairs_cleaning_time') | float(0) %}
+          {% set total_time = states('sensor.d10_plus_gen_2_upstairs_total_cleaning_time') | float(0) %}
+          {% set count = states('sensor.d10_plus_gen_2_upstairs_cleaning_count') | float(0) %}
+          {% set avg_time = count > 0 and (total_time / count) or 0 %}
+          {% if avg_time > 0 %}
+            {{ [((current / avg_time) * 100) | round(1), 100] | min }}
+          {% else %}
+            0
+          {% endif %}
+       availability: >
+          {{ states('sensor.d10_plus_gen_2_upstairs_cleaning_time') not in ['unknown','unavailable'] }}
+          
+     - name: "Basement Cleaning Progress"
+       unit_of_measurement: "%"
+       state: >
+          {% set current = states('sensor.d10_plus_gen_2_basement_cleaning_time') | float(0) %}
+          {% set total_time = states('sensor.d10_plus_gen_2_basement_total_cleaning_time') | float(0) %}
+          {% set count = states('sensor.d10_plus_gen_2_basement_cleaning_count') | float(0) %}
+          {% set avg_time = count > 0 and (total_time / count) or 0 %}
+          {% if avg_time > 0 %}
+            {{ [((current / avg_time) * 100) | round(1), 100] | min }}
+          {% else %}
+            0
+          {% endif %}
+       availability: >
+          {{ states('sensor.d10_plus_gen_2_basement_cleaning_time') not in ['unknown','unavailable'] }}
+
+     - name: "HVAC Mode"
+       state: >
+        {% set primary_feels_like = states('sensor.ws2902_weather_feels_like') %}
+        {% set fallback_feels_like = states('sensor.pirateweather_apparent_temperature') %}
+        {% set feels_like = (primary_feels_like if primary_feels_like not in ['unavailable', 'unknown'] else fallback_feels_like) | float(0) | round(0) %}
+        {% set indoor_temp = states('sensor.ecobee_thermostat_current_temperature') | float(0) | round(0) %}
+        
+        {% if feels_like <= 50 and indoor_temp < 71 %}
+          heat
+        {% elif feels_like >= 74 and indoor_temp >= 73 %}
+          cool
+        {% else %}
+          heat_cool
+        {% endif %}
+
+     - name: "Desired Indoor Temp"
+       unique_id: "desired_indoor_temperature"
+       state: >
+          {% set min_temp = 68 %}
+          {% set max_temp = 71 %}
+          {% set min_outside = 0 %}
+          {% set max_outside = 100 %}
+            
+          {% set primary_feels_like = states('sensor.ws2902_weather_feels_like') %}
+          {% set fallback_feels_like = states('sensor.pirateweather_apparent_temperature') %}
+          {% set apparent_temp = (primary_feels_like if primary_feels_like not in ['unavailable', 'unknown'] else fallback_feels_like) | float(0) %}
+            
+          {% if apparent_temp <= min_outside %}
+            {{ max_temp | float }}
+          {% elif apparent_temp >= max_outside %}
+            {{ min_temp | float }}
+          {% else %}
+            {{ (max_temp - ((max_temp - min_temp) / (max_outside - min_outside)) * (apparent_temp - min_outside)) | round(0) | float }}
+          {% endif %}
+
+     - name: "Fan Mode"
+       state: >
+         {% set primary_feels_like = states('sensor.ws2902_weather_feels_like') %}
+         {% set fallback_feels_like = states('sensor.pirateweather_apparent_temperature') %}
+         {% set feels_like = (primary_feels_like if primary_feels_like not in ['unavailable', 'unknown'] else fallback_feels_like) | float(0) %}
+         {% set house_temp = states('sensor.ecobee_thermostat_current_temperature') | float(0) | round(0) %}
+         {% set indoor_humidity = states('sensor.main_floor_humidity') | float(35) %}
+         {% if (feels_like >= 80 and house_temp >= 74) or indoor_humidity >= 52 %}
+           on
+         {% else %}
+           auto
+         {% endif %}
+
+     - name: "Ceiling Fan Speed"
+       state: >
+         {% set primary_feels_like = states('sensor.ws2902_weather_feels_like') %}
+         {% set fallback_feels_like = states('sensor.pirateweather_apparent_temperature') %}
+         {% set feels_like = (primary_feels_like if primary_feels_like not in ['unavailable', 'unknown'] else fallback_feels_like) | float(0) | round(0) %}
+         {% set indoor_humidity = states('sensor.main_floor_humidity') | float(0) | round(0) %}
+         {% set bedtime_warm = states('sensor.s1_pro_bedroom_temperature') | float(0) | round(0) >= 71 %}
+         {% set temp_library = states('sensor.library_ep1_temperature') | float(0) %}
+         {% set temp_bedroom = states('sensor.s1_pro_bedroom_temperature') | float(0) %}
+         {% set avg_indoor_temp = (temp_library + temp_bedroom) / 2 %}
+
+         {% if feels_like >= 85 or indoor_humidity >= 65 or bedtime_warm %}
+           100
+         {% elif feels_like >= 75 %}
+           66
+         {% elif feels_like >= 60 and indoor_humidity >= 50 %}
+           33
+         {% else %}
+           0
+         {% endif %}
+         
+     - name: "Adjusted Irradiance"
+       unique_id: sensor_adjusted_irradiance
+       state: >-
+         {% set raw_illuminance = states('sensor.smoothed_irradiance') | float(0) %}
+         {% set sun_pos = states('sensor.sun_position_relative_to_house') %}
+         {% set adjusted_illuminance =
+              raw_illuminance / 2
+              if sun_pos not in ['Front', 'Back']
+              else raw_illuminance %}
+         {{ adjusted_illuminance | float(0) | round(0) }}
+
+     - name: "Living Room Mode"
+       unique_id: sensor_living_room_mode
+       state: >-
+            {% set pir = is_state('binary_sensor.living_room_ep1_occupancy', 'on') %}
+            {% set adjusted_lux = states('sensor.adjusted_irradiance') | float %}
+            {% set illuminance_ok = adjusted_lux <= 75 %}
+            {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+            {% set time_mode = states('input_select.time_mode') %}
+            
+            {% if pir and illuminance_ok and not_sleeping %}
+              {{ time_mode }}
+            {% else %}
+              off
+            {% endif %}
+
+     - name: "Kitchen Mode"
+       unique_id: sensor_kitchen_mode
+       state: >
+          {% set pir = is_state('binary_sensor.kitchen_ep1_occupancy', 'on') %}
+          {% set raw_lux = states('sensor.adjusted_irradiance') | float %}
+          {% set illuminance_ok = raw_lux < 75 %}
+          {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+          {% set back_door_unlocked = is_state('lock.back_door_lock','unlocked') %}
+          {% set time_mode = states('input_select.time_mode') %}
+            
+          {% if (pir or back_door_unlocked) and illuminance_ok and not_sleeping %}
+            {{ time_mode }}
+          {% else %}
+            off
+          {% endif %}
+
+     - name: "Bedroom Mode"
+       unique_id: sensor_bedroom_mode
+       state: >
+          {% set pir = is_state('binary_sensor.bedroom_derived_ep1_occupancy','on') 
+                       or is_state('binary_sensor.shower_in_use','on') %}
+          {% set illuminance_ok = states('sensor.adjusted_irradiance') | float < 50 %}
+          {% set time_mode = states('input_select.time_mode') %}
+          {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+          {% set not_reading = states('input_select.home_mode') != 'reading' %}
+          {% if pir and illuminance_ok and not_sleeping and not_reading %}
+            {{ time_mode }}
+          {% else %}
+            off
+          {% endif %}
+          
+     - name: "Master Bath Mode"
+       unique_id: sensor_master_bath_mode
+       state: >-
+           {% set pir = is_state('binary_sensor.master_bath_ep1_occupancy','on') %}
+           {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+           {% set time_mode = states('input_select.time_mode') %}
+            
+           {% if pir and not_sleeping %}
+             {{ time_mode }}
+           {% else %}
+             off
+           {% endif %}
+
+     - name: "Bathroom Mode"
+       unique_id: sensor_bathroom_mode
+       state: >-
+          {% set pir = is_state('binary_sensor.bathroom_ep1_occupancy','on') %}
+          {% set time_mode = states('input_select.time_mode') %}
+          {% if pir %}
+            {{ time_mode }}
+          {% else %}
+            off
+          {% endif %}
+     
+     - name: "Library Mode"
+       unique_id: sensor_library_mode
+       state: >-
+            {% set pir = is_state('binary_sensor.library_ep1_occupancy', 'on') %}
+            {% set raw_illuminance = states('sensor.adjusted_irradiance') | float(0) %}
+            {% set illuminance_low = raw_illuminance < 100 %}
+            {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+            {% set time_mode = states('input_select.time_mode') %}
+            
+            {% if pir and illuminance_low and not_sleeping %}
+              {{ time_mode }}
+            {% else %}
+              off
+            {% endif %}
+            
+     - name: "Meditation Mode"
+       unique_id: sensor_meditation_mode
+       state: >-
+            {% set pir = is_state('binary_sensor.meditation_ep1_occupancy', 'on') %}
+            {% set illuminance_ok = (states('sensor.adjusted_irradiance') | float ) < 100 %}
+            {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+            {% set not_meditating = is_state('input_boolean.is_meditating','off') %}
+            {% set time_mode = states('input_select.time_mode') %}
+            
+            {% if pir and illuminance_ok and not_sleeping and not_meditating %}
+              {{ time_mode }}
+            {% else %}
+              off
+            {% endif %}
+
+     - name: "Garage Mode"
+       unique_id: sensor_garage_mode
+       state: >-
+            {% set pir = is_state('binary_sensor.garage_ep1_occupancy', 'on')
+                      or is_state('binary_sensor.garage_door_contact_sensor','on')%}
+            {% set not_sleeping = states('input_select.home_mode') != 'bedtime' %}
+            {% set time_mode = states('input_select.time_mode') %}
+
+            {% if pir and not_sleeping %}
+              {{ time_mode }}
+            {% else %}
+              off
+            {% endif %}
+            
+     - name: "Patio Mode"
+       unique_id: sensor_patio_mode
+       state: >-
+        {% set back_door_unlocked = not is_state('lock.back_door_lock', 'locked') %}
+        {% set low_light = (states('sensor.adjusted_irradiance') | float ) < 5 %}
+        {% set time_mode = states('input_select.time_mode') %}
+
+        {% if back_door_unlocked and low_light %}
+          {{ time_mode }}
+        {% else %}
+          off
+        {% endif %}
+        
+     - name: "Front Porch Mode"
+       unique_id: sensor_front_porch_mode
+       state: >-
+        {% set front_door_unlocked = not is_state('lock.front_door_lock', 'locked') %}
+        {% set low_light = (states('sensor.adjusted_irradiance') | float ) < 10 %}
+        {% set person_detected = is_state('binary_sensor.front_door_person_stable', 'on') %}
+        {% if low_light and (front_door_unlocked or person_detected) %}
+          on
+        {% else %}
+          off
+        {% endif %}
+        
+     - name: "Sun Position Relative to House"
+       state: >
+        {% set azimuth = state_attr('sun.sun', 'azimuth') %}
+        {% set elevation = state_attr('sun.sun', 'elevation') %}
+        {% if elevation < 0 %}
+          Dark
+        {% elif azimuth >= 225 and azimuth < 315 %}
+          Front
+        {% elif azimuth >= 45 and azimuth < 135 %}
+          Back
+        {% elif azimuth >= 135 and azimuth < 225 %}
+          Side
+        {% elif azimuth >= 315 or azimuth < 45 %}
+          Side
+        {% else %}
+          Unknown
+        {% endif %}
+        
+     - name: "Outdoor AQI"
+       unique_id: outdoor_aqi_approx
+       unit_of_measurement: "AQI"
+       state_class: measurement
+       device_class: aqi
+       state: >
+            {% set pm25 = states('sensor.o_1pst_pm2_5') | float(0) %}
+            {% set pm10 = states('sensor.o_1pst_pm10') | float(0) %}
+            {% set nox_index = states('sensor.o_1pst_nox_index') | float(0) %}
+            
+            {% macro calc_aqi(C, breakpoints) %}
+              {% for bp in breakpoints %}
+                {% set Clow, Chigh, Ilow, Ihigh = bp %}
+                {% if Clow <= C <= Chigh %}
+                  {% set aqi = ((Ihigh - Ilow) / (Chigh - Clow)) * (C - Clow) + Ilow %}
+                  {{ aqi | round(0) }}
+                {% endif %}
+              {% endfor %}
+            {% endmacro %}
+            
+            {% set pm25_breakpoints = [
+              (0.0, 12.0, 0, 50),
+              (12.1, 35.4, 51, 100),
+              (35.5, 55.4, 101, 150),
+              (55.5, 150.4, 151, 200),
+              (150.5, 250.4, 201, 300),
+              (250.5, 350.4, 301, 400),
+              (350.5, 500.4, 401, 500)
+            ] %}
+            
+            {% set pm10_breakpoints = [
+              (0, 54, 0, 50),
+              (55, 154, 51, 100),
+              (155, 254, 101, 150),
+              (255, 354, 151, 200),
+              (355, 424, 201, 300),
+              (425, 504, 301, 400),
+              (505, 604, 401, 500)
+            ] %}
+            
+            {% set aqi_pm25 = calc_aqi(pm25, pm25_breakpoints) | int(0) %}
+            {% set aqi_pm10 = calc_aqi(pm10, pm10_breakpoints) | int(0) %}
+            {% set aqi_nox = (nox_index * 30) | round(0) %}
+            {% set aqi_nox = [aqi_nox, 150] | min %}  {# Cap NOx contribution to prevent extreme values #}
+            
+            {{ [aqi_pm25, aqi_pm10, aqi_nox] | max }}
+            
+     - name: "Dog Age"
+       unit_of_measurement: "yr"
+       state: >
+          {% set bday = states('input_text.dog_birthdate') %}
+          {% if bday != '' %}
+            {% set diff = (now().date() - strptime(bday, '%Y-%m-%d').date()).days %}
+            {{ (diff / 365.25) | round(1) }}
+          {% else %}
+            unknown
+          {% endif %}
+
+     - name: "Cat Age"
+       unit_of_measurement: "yr"
+       state: >
+          {% set bday = states('input_text.cat_birthdate') %}
+          {% if bday != '' %}
+            {% set diff = (now().date() - strptime(bday, '%Y-%m-%d').date()).days %}
+            {{ (diff / 365.25) | round(1) }}
+          {% else %}
+            unknown
+          {% endif %}
+          
+     - name: "Soil Moisture"
+       unit_of_measurement: "%"
+       device_class: moisture
+       state: >
+          {% set garage_state = states('sensor.garage_garden_soil_sensor_humidity') %}
+          {{ garage_state | float | round(1) }}
+     
+     - name: "Soil Moisture Battery"
+       unit_of_measurement: "%"
+       device_class: battery
+       state: >
+         {% set garage_battery_state = states('sensor.garage_garden_soil_sensor_battery') %}
+         {{ garage_battery_state | float | round(1) }}
+         
+     - name: "Soil Temperature"
+       unit_of_measurement: "°F"
+       device_class: temperature
+       state: >
+         {% set garage_temp_state = states('sensor.garage_garden_soil_sensor_temperature') %}
+         {{ garage_temp_state | float | round(1) }}
+
+     - name: "Water Needed"
+       unit_of_measurement: "gal"
+       state: >
+        {% set current = states('sensor.soil_moisture') | float(0) %}
+        {% set target = 45 %}
+        {% set delta_moisture = target - current if target > current else 0 %}
+        
+        {# Baseline: 0.3064 gal per % moisture #}
+        {% set base_gal_per_percent = 0.3064 %}
+        
+        {# Environmental data #}
+        {% set temp_now = states('sensor.soil_temperature') | float(0) %}
+        {% set temp_base = 100.47 %}
+        {% set wind_now = states('sensor.ws2902_weather_wind_speed') | float(0) %}
+        {% set wind_base = 0.76 %}
+        
+        {# Adjustment factors #}
+        {% set temp_adj = 1 + ((temp_now - temp_base) / temp_base) * 0.5 %}
+        {% set wind_adj = 1 + ((wind_now - wind_base) / wind_base) * 0.5 if wind_base > 0 else 1 %}
+        {% set env_adjustment = temp_adj * wind_adj %}
+        
+        {# Estimate raw water need before rain offset #}
+        {% set raw_gallons = delta_moisture * base_gal_per_percent * env_adjustment %}
+        
+        {# Adjust for rainfall #}
+        {% set rainfall_in = states('sensor.ws2902_weather_daily_rain') | float(0) %}
+        {% set rain_gallons = rainfall_in * 16 * 0.623 %}
+        {% set adjusted_gallons = [raw_gallons - rain_gallons, 0] | max %}
+        
+        {{ adjusted_gallons | round(1) }}
+        
+     - name: "PM2.5 Filter Effectiveness"
+       unit_of_measurement: "%"
+       state: >
+          {% set indoor = states('sensor.apollo_air_1_pm_2_5mm') | float(0) %}
+          {% set outdoor = states('sensor.o_1pst_pm2_5') | float(0) %}
+          {% if outdoor > 0 %}
+            {% set eff = (1 - indoor / outdoor) * 100 %}
+            {{ [eff, 0] | max | round(0) }}
+          {% else %}
+            100
+          {% endif %}
+          
+     - name: "Furnace Filter Age"
+       unit_of_measurement: "days"
+       state: >
+          {% set last = states('input_datetime.furnace_filter_last_changed') %}
+          {% if last not in ['unknown','unavailable','none'] %}
+            {{ ((as_timestamp(now()) - as_timestamp(last)) / 86400) | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+          
+     - name: "Outdoor Temperature Mired"
+       unique_id: outdoor_temperature_mired
+       unit_of_measurement: "°"
+       state: >
+          {% set temp = states('sensor.ws2902_weather_temperature') | float(70) %}
+          {% set min_temp, max_temp = 0, 100 %}
+          {% set warm_mired, cool_mired = 375, 153 %}
+          {% set neutral_mired = 300 %}
+          {% set neutral_temp = 72 %}
+          {# Clamp temp into range #}
+          {% set clamped = [ [temp, min_temp] | max, max_temp ] | min %}
+          {# Normalize temperature into 0–1 range #}
+          {% set norm = (clamped - min_temp) / (max_temp - min_temp) %}
+          {# Cosine easing curve: f(x) = (1 - cos(pi * x)) / 2 #}
+          {% set eased = (1 - (norm * 3.14159) | cos) / 2 %}
+          {# Map eased curve from warm_mired → cool_mired #}
+          {% set base_color_temp = warm_mired + (cool_mired - warm_mired) * eased %}
+          {# Bias toward neutral around 72°F #}
+          {% set bias_strength = 0.3 %}
+          {% set deviation = (clamped - neutral_temp) | abs %}
+          {% set blend_factor = 1 - ((deviation / (max_temp - min_temp)) * 2) %}
+          {% if blend_factor < 0 %}{% set blend_factor = 0 %}{% endif %}
+          {% set color_temp = base_color_temp * (1 - bias_strength * blend_factor) + neutral_mired * (bias_strength * blend_factor) %}
+          {{ color_temp | round(0) }}
+          
+     - name: "Low Battery Devices"
+       state: >
+          {% set excluded = [
+            'sensor.garage_handle_lock_battery_voltage',
+            'sensor.back_door_lock_battery_voltage',
+            'sensor.front_door_lock_battery_voltage',
+            'sensor.ecolink_firefighter_battery',
+            'sensor.low_battery_devices'
+          ] %}
+          {% set low_batteries = expand(states.sensor)
+            | selectattr('entity_id','search','_battery$')
+            | selectattr('state','ne','unavailable')
+            | selectattr('state','ne','unknown')
+            | rejectattr('entity_id','in',excluded)
+            | list %}
+          {% set low_batteries = low_batteries | selectattr('state','defined') | list %}
+          {{ low_batteries | map(attribute='state') | map('float') | select('lt', 50) | list | count }}
+       attributes:
+          devices: >
+            {% set excluded = [
+              'sensor.garage_handle_lock_battery_voltage',
+              'sensor.back_door_lock_battery_voltage',
+              'sensor.front_door_lock_battery_voltage',
+              'sensor.ecolink_firefighter_battery'
+            ] %}
+            {% set low_batteries = expand(states.sensor)
+              | selectattr('entity_id','search','_battery$')
+              | selectattr('state','ne','unavailable')
+              | selectattr('state','ne','unknown')
+              | rejectattr('entity_id','in',excluded)
+              | list %}
+            {% for e in low_batteries if (e.state | float(100)) < 50 %}
+              - name: {{ e.name }}
+                level: {{ e.state }}%
+                type: {{ state_attr(e.entity_id, 'battery_type') }}
+                quantity: {{ state_attr(e.entity_id, 'battery_quantity') }}
+            {% endfor %}
+            
+     - name: "Unavailable Devices"
+       state: >
+          {# Build device → entity list mapping #}
+          {% set dm = namespace(map={}) %}
+          {% for s in states %}
+            {% set dev = device_id(s.entity_id) %}
+            {% if dev %}
+              {% set dm.map = dm.map | combine({
+                dev: (dm.map.get(dev, []) + [s.entity_id])
+              }, recursive=True) %}
+            {% endif %}
+          {% endfor %}
+          {# Determine which devices are fully unavailable #}
+          {% set offline = [] %}
+          {% for dev, ents in dm.map.items() %}
+            {% set name = device_attr(dev, 'name') %}
+            {% if name %}
+              {% set all_unavail = ents | selectattr('state', 'in', ['unavailable','offline']) | list | count == ents | count %}
+              {% if all_unavail %}
+                {% set offline = offline + [name] %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ offline | sort | join(', ') }}
+ 
+- binary_sensor:
+    - name: fireplace_mode
+      default_entity_id: binary_sensor.fireplace_mode
+      state: >
+        {% set primary_feels_like = states('sensor.ws2902_weather_feels_like') %}
+        {% set fallback_feels_like = states('sensor.pirateweather_apparent_temperature') %}
+        {% set feels_like =
+          (primary_feels_like if primary_feels_like not in ['unavailable', 'unknown']
+           else fallback_feels_like)
+          | float(0) | round(0) %}
+        
+        {% set not_bedtime = states('input_select.home_mode') != 'bedtime' %}
+        {% set dark_out = states('sensor.ws2902_weather_irradiance') | float(0) < 10 %}
+        {% set temp = states('sensor.ws2902_weather_temperature') | float(0) %}
+        {% set indoor_temp = states('sensor.living_room_ep1_temperature') | float(0) | round(0) %}
+        
+        {% set occupied =
+          is_state('binary_sensor.living_room_ep1_occupancy', 'on')
+          or is_state('input_boolean.movie_time', 'on')
+        %}
+        
+        {{ 
+          not_bedtime
+          and occupied
+          and (
+            (feels_like <= 56 and dark_out and indoor_temp < 70)
+            or (temp < 15)
+          )
+        }}
+
+    - name: snow_forecasted
+      default_entity_id: binary_sensor.snow_forecasted
+      state: >
+        {{ states('sensor.[county]') | int > 0 and 'snow' in (state_attr('sensor.[county]', 'alerts') | default([]) | map(attribute='description') | join(' ') | lower) }}
+
+    - name: washing_machine_running
+      default_entity_id: binary_sensor.washing_machine_running
+      state: >
+        {% set mean_value = states('sensor.washing_machine_current_mean') %}
+        {{ mean_value | float(0) > 0.1 }}
+    
+    - name: master_bath_motion
+      default_entity_id: binary_sensor.master_bath_motion
+      state: >
+        {{ (is_state('binary_sensor.master_bath_bed_motion_sensor_motion', 'on') or
+             is_state('binary_sensor.master_bath_hall_motion_sensor_motion', 'on') or
+             is_state('binary_sensor.main_bath_nightlight_motion', 'on')) }}
+    
+    - name: master_bath_motion_bedtime
+      default_entity_id: binary_sensor.master_bath_motion_bedtime
+      state: >
+        {{ (is_state('binary_sensor.master_bath_bed_motion_sensor_motion', 'on') or
+             is_state('binary_sensor.main_bath_nightlight_motion', 'on'))}}
+             
+    - name: master_bath_contact_sensor
+      default_entity_id: binary_sensor.master_bath_contact_sensor
+      state: >
+        {{ (is_state('binary_sensor.master_bath_bed_contact_sensor', 'off') and
+             is_state('binary_sensor.master_bath_hall_contact_sensor', 'off')) }}
+             
+    - name: master_bath_ep1_occupancy
+      default_entity_id: binary_sensor.master_bath_ep1_occupancy
+      state: >
+        {{ is_state('binary_sensor.master_bath_motion','on')
+             or is_state('binary_sensor.master_bath_contact_sensor','on')
+             or is_state('binary_sensor.shower_in_use', 'on') }}
+             
+    - name: bathroom_ep1_motion
+      default_entity_id: binary_sensor.bathroom_ep1_motion
+      state: >
+        {{ is_state('binary_sensor.bathroom_motion_sensor_motion', 'on') }}
+      delay_off: "00:00:30"
+      
+    - name: bathroom_ep1_occupancy
+      default_entity_id: binary_sensor.bathroom_ep1_occupancy
+      state: >
+        {{ (is_state('binary_sensor.bathroom_ep1_motion', 'on') or 
+            is_state('binary_sensor.bathroom_contact_sensor', 'off')) }}
+             
+    - name: bedroom_derived_ep1_occupancy
+      default_entity_id: binary_sensor.bedroom_derived_ep1_occupancy
+      state: >
+        {% set pir = is_state('binary_sensor.s1_pro_bedroom_presence','on') %}
+        {% set is_bedtime = is_state('input_select.home_mode','bedtime') %}
+        {{ pir or is_bedtime }}
+          
+    - name: basement_ep1_occupancy
+      default_entity_id: binary_sensor.basement_ep1_occupancy
+      state: >
+        {{ is_state('binary_sensor.basement_door_contact_sensor','on') or 
+           is_state('binary_sensor.laundry_door_contact_sensor','on') }}
+             
+    - name: drone_room_ep1_occupancy
+      default_entity_id: binary_sensor.drone_room_ep1_occupancy
+      state: >
+        {{ is_state('binary_sensor.drone_room_motion_sensor_motion','on') }}
+        
+    - name: dining_room_ep1_occupancy
+      default_entity_id: binary_sensor.dining_room_ep1_occupancy
+      state: >
+        {{ is_state('light.zigbee_group_dining_room','on') }}
+        
+    - name: front_porch_ep1_occupancy
+      default_entity_id: binary_sensor.front_porch_ep1_occupancy
+      state: >
+        {{ is_state('binary_sensor.doorbell_person','on') }}
+        
+    - name: hallway_ep1_occupancy
+      default_entity_id: binary_sensor.hallway_ep1_occupancy
+      state: >
+        {{ is_state('light.zigbee_group_hallway','on') }}
+        
+    - name: upstairs_ep1_occupancy
+      default_entity_id: binary_sensor.upstairs_ep1_occupancy
+      state: >
+        {{ is_state('light.upstairs','on') }}
+        
+    - name: shower_in_use
+      default_entity_id: binary_sensor.shower_in_use
+      state: >
+        {% set home_mode = states('input_select.home_mode') %}
+        {% if home_mode == 'bedtime' %}
+          false
+        {% else %}
+          {% set devices = state_attr('sensor.[phone]_bluetooth_connection', 'connected_paired_devices') or [] %}
+          {% set friendly_devices = devices | map('regex_replace', '^.*\\((.*)\\)$', '\\1') | list %}
+          {% set rate = states('sensor.master_bath_humidity_rate') %}
+          {{ ("Shower Power Pro" in friendly_devices or "WONDERBOOM 4" in friendly_devices)
+              or (rate not in ['unknown', 'unavailable', 'none'] and rate | float(0) > 0.6) }}
+        {% endif %}
+      delay_off: "00:05:00"
+      
+    - name: outer_doors_locked
+      default_entity_id: binary_sensor.outer_doors_locked
+      state: >
+        {{ is_state('lock.front_door_lock','locked') and is_state('lock.back_door_lock','locked') and is_state('lock.garage_handle_lock','locked') }}
+        
+    - name: hrv_co2_trigger
+      default_entity_id: binary_sensor.hrv_co2_trigger
+      state: >
+        {% set kitchen_co2 = states('sensor.kitchen_co2')|int %}
+        {% set library_co2 = states('sensor.library_ep1_co2')|int %}
+        {% set master_bedroom_co2 = states('sensor.s1_pro_bedroom_co2')|int %}
+        {% set meditation_co2 = states('sensor.meditation_co2')|int %}
+        {% set avg_co2 = (kitchen_co2 + library_co2 + master_bedroom_co2 + meditation_co2) / 4 | float(0) %}
+        {{ avg_co2 > 1000 }}
+        
+    - name: hrv_needs_on
+      default_entity_id: binary_sensor.hrv_needs_on
+      state: >
+        {% set co2_ok = is_state('binary_sensor.hrv_co2_trigger', 'on') %}
+        {% set humidity_ok = states('sensor.main_floor_humidity') | float >= 55 %}
+        {% set occupancy_ok = states('zone.home') | float(0) > 0 %}
+        {% set indoor_aq_ok = states('sensor.apollo_air_1_pm_2_5mm') | float > 35 %}
+        {% set outdoor_aq_ok = states('sensor.o_1pst_pm2_5') | float < 100 %}
+        {% set outdoor_temp = states('sensor.ws2902_weather_temperature') | float %}
+        {% set temp_ok = (outdoor_temp >= 32) and (outdoor_temp <= 85) %}
+        {% set front_door_closed = is_state('binary_sensor.front_door_contact_sensor','off') %}
+        {{ (co2_ok or humidity_ok) and occupancy_ok and outdoor_aq_ok and temp_ok and front_door_closed }}
+        
+    - name: driveway_person_stable
+      default_entity_id: binary_sensor.driveway_person_stable
+      state: >
+        {{ is_state('binary_sensor.driveway_person', 'on') }}
+      delay_off: "00:01:00"
+      
+    - name: front_door_person_stable
+      default_entity_id: binary_sensor.front_door_person_stable
+      state: >
+        {{ is_state('binary_sensor.doorbell_person', 'on') }}
+      delay_off: "00:01:00"
+      
+    - name: side_door_person_stable
+      default_entity_id: binary_sensor.side_door_person_stable
+      state: >
+        {{ is_state('binary_sensor.side_door_person', 'on') }}
+      delay_off: "00:01:00"
