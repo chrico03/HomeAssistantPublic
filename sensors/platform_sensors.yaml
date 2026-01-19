@@ -1,0 +1,33 @@
+- platform: weatheralerts
+  state: [insert state]
+  zone: [insert zone]
+  county: [insert county]
+  
+- platform: statistics
+  name: Washing Machine Current Mean
+  entity_id: sensor.washing_machine_current
+  state_characteristic: mean
+  sampling_size: 30
+  max_age:
+    minutes: 10
+
+- platform: derivative
+  source: sensor.master_bath_temp_humidity_sensor_humidity
+  name: Master Bath Humidity Rate
+  unit_time: min
+  time_window: "00:01:00"
+  
+- platform: statistics
+  name: "PM2.5 Filter Effectiveness - 24h Avg"
+  entity_id: sensor.pm2_5_filter_effectiveness
+  state_characteristic: mean
+  max_age:
+    hours: 48
+    
+- platform: filter
+  name: "Smoothed Irradiance"
+  entity_id: sensor.ws2902_weather_irradiance
+  filters:
+    - filter: time_simple_moving_average
+      window_size: "00:15"
+      precision: 0
