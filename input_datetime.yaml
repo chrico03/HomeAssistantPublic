@@ -1,0 +1,20 @@
+dog_out_potty_last_time:
+  name: Last Dog Out Time
+  has_date: true
+  has_time: true
+dog_fed_last_time:
+  name: Last Dog Fed Time
+  has_date: true
+  has_time: true
+cleaned_litterbox_time:
+  name: Cleaned Litterbox Time
+  has_date: true
+  has_time: true
+garden_last_watered_time:
+  name: Garden Last Watered
+  has_date: true
+  has_time: true
+furnace_filter_last_changed:
+  name: Furnace Filter Last Changed
+  has_date: true
+  has_time: true
