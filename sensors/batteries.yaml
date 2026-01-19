@@ -1,0 +1,135 @@
+sensor.dryer_vibration_sensor_battery:
+  battery_type: AAA
+  battery_quantity: 2
+
+sensor.back_door_lock_battery:
+  battery_type: AA
+  battery_quantity: 4
+  
+sensor.front_door_lock_battery:
+  battery_type: AA
+  battery_quantity: 4
+  
+sensor.garage_handle_lock_battery:
+  battery_type: AA
+  battery_quantity: 4
+
+sensor.kitchen_leak_sensor_battery:
+  battery_type: AAA
+  battery_quantity: 2
+
+sensor.bathroom_battery:
+  battery_type: AAA
+  battery_quantity: 2
+
+sensor.master_bath_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.main_garage_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.side_garage_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.basement_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.basement_temp_humidity_sensor_battery:
+  battery_type: CR2032
+  battery_quantity: 1
+  
+sensor.master_bath_temp_humidity_sensor_battery:
+  battery_type: CR2032
+  battery_quantity: 1
+  
+sensor.bathroom_motion_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.drone_room_motion_sensor_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.master_bath_bed_motion_sensor_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.master_bath_hall_motion_sensor_battery:
+  battery_type: AAA
+  battery_quantity: 2
+  
+sensor.back_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.basement_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.bathroom_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.closet_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.front_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.garage_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.hallway_closet_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.laundry_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.library_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.main_garage_side_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.master_bath_bed_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.master_bath_hall_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.side_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.side_garage_side_door_contact_sensor_battery:
+  battery_type: CR2
+  battery_quantity: 1
+  
+sensor.dog_food_container_battery:
+  battery_type: CR2
+  battery_quantity: 1
+
+sensor.alley_garden_soil_sensor_battery:
+  battery_type: AA
+  battery_quantity: 1
+  
+sensor.garage_garden_soil_sensor_battery:
+  battery_type: AA
+  battery_quantity: 1
+
+sensor.backyard_motion_sensor_battery:
+  battery_type: AA
+  battery_quantity: 2
