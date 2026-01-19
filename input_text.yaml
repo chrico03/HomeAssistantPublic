@@ -1,0 +1,20 @@
+cat_name:
+  name: Cat Name
+cat_birthdate:
+  name: Cat Birthdate
+  pattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  initial: '2024-09-15'
+cat_microchip:
+  name: Cat Microchip #
+cat_rabies_tag:
+  name: Cat Rabies Tag #
+dog_name:
+  name: Dog Name
+dog_birthdate:
+  name: Dog Birthdate
+  pattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  initial: '2018-08-21'
+dog_microchip:
+  name: Dog Microchip #
+dog_rabies_tag:
+  name: Dog Rabies Tag #
