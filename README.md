@@ -76,7 +76,8 @@ Energy efficiency is treated as a *system-wide concern*, not just a single dashb
 
 * This is a **sanitized public version** of my personal Home Assistant configuration
 * Secrets, entity IDs, and environment-specific details have been removed or generalized
-* Some automations may require adjustment to fit different hardware or layouts
+* Some automations/scripts may require adjustment to fit different hardware or layouts
+    - Anything denoted with `[text]` indicate spots where changes will need to be made
 
 ---
 
