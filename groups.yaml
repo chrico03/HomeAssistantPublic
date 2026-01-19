@@ -1,0 +1,24 @@
+  outer_doors:
+    name: "Outer Doors"
+    entities:
+      - binary_sensor.back_door_contact_sensor
+      - binary_sensor.front_door_contact_sensor
+      - binary_sensor.side_door_contact_sensor
+      - binary_sensor.garage_door_contact_sensor
+      - binary_sensor.basement_door_contact_sensor
+      - binary_sensor.laundry_door_contact_sensor
+      - binary_sensor.side_garage_side_door_contact_sensor
+      - binary_sensor.main_garage_side_door_contact_sensor
+  
+  outer_door_locks:
+    name: "Outer Door Locks"
+    entities:
+      - lock.front_door_lock
+      - lock.back_door_lock
+      - lock.garage_handle_lock
+
+  driveway_floods:
+    name: "Driveway Floods"
+    entities:
+      - light.driveway_flood_light
+      - light.driveway_floodlight
